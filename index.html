@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Qwertz'in Dünyası</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://w.soundcloud.com/player/api.js"></script>
     <style>
         :root { --main-bg: #0f172a; --accent: #00ff88; --glass: rgba(255, 255, 255, 0.05); }
         body { 
@@ -16,7 +17,7 @@
         .active { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
         .bg-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%); z-index: -1; }
         
-        .container { background: var(--glass); backdrop-filter: blur(15px); padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); max-width: 500px; width: 90%; position: relative; margin-bottom: 20px; box-sizing: border-box; }
+        .container { background: var(--glass); backdrop-filter: blur(15px); padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); max-width: 500px; width: 90%; position: relative; margin-bottom: 20px; box-sizing: border-box; z-index: 2; }
         h1 { color: var(--accent); font-size: 24px; text-shadow: 0 0 15px rgba(0,255,136,0.3); margin-top: 0; }
         
         button { padding: 12px 25px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 16px; }
@@ -55,8 +56,23 @@
         /* SAĞ ALT KÖŞE MÜZİK BUTONU */
         .floating-music-btn { position: fixed; bottom: 25px; right: 25px; background: #e11d48; color: white; border: none; border-radius: 50px; padding: 15px 25px; font-size: 16px; cursor: pointer; box-shadow: 0 5px 20px rgba(225, 29, 72, 0.4); z-index: 9999; transition: 0.3s; }
 
-        /* ŞEFFAF ARKA PLAN YAZISI */
-        .watermark { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 13px; color: rgba(255, 255, 255, 0.15); font-weight: bold; pointer-events: none; z-index: 999; letter-spacing: 1px; }
+        /* YENİ: TAM SAYFANIN ORTASINDAKİ ŞEFFAF FİLİGRAN YAZISI */
+        .center-watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15px);
+            font-size: 5vw; /* Ekran boyutuna göre otomatik büyür/küçülür */
+            min-size: 24px;
+            color: rgba(255, 255, 255, 0.05); /* Aşırı şeffaf, gözü yormaz */
+            font-weight: 900;
+            white-space: nowrap;
+            pointer-events: none; /* Tıklamalara engel olmaz */
+            user-select: none;
+            z-index: 1; /* Arka planın üstünde, kutuların altında kalır */
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
 
         /* TARLA VE TAVŞAN OYUNU DİZAYNI */
         .tarla-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; background: #1e3a1e; padding: 15px; border-radius: 20px; border: 4px solid #3f6212; }
@@ -67,19 +83,21 @@
         /* BOM Efekti */
         .bom-efekt { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #f59e0b; font-weight: 900; font-size: 24px; text-shadow: 0 0 10px #ef4444; animation: bomAnim 0.4s ease-out forwards; pointer-events: none; display: none; }
         @keyframes bomAnim { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
+        
+        #sc-container { position: fixed; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0; }
     </style>
 </head>
 <body>
 
     <div class="bg-glow"></div>
     
-    <div class="watermark">mustafassahin5546-creator tarafından yapılmıştır</div>
+    <div class="center-watermark">mustafassahin5546-creator</div>
 
     <button class="dev-btn" onclick="devGiris()">🛠️ Geliştirici</button>
 
-    <audio id="bg-audio" loop>
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" type="audio/mpeg">
-    </audio>
+    <div id="sc-container">
+        <iframe id="sc-player" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/335122134&auto_play=false" scrolling="no" frameborder="no" allow="autoplay"></iframe>
+    </div>
     <button id="music-btn" class="floating-music-btn" onclick="toggleMusic()">🎵 Müzik Aç</button>
 
     <div id="survey-page" class="page active">
@@ -98,7 +116,7 @@
             </div>
 
             <button class="btn-game" onclick="gecSayfa('game-page')">🎮 YAPAY ZEKA ÇİZİM OYUNU</button>
-            <button class="btn-game" style="background:#10b981;" onclick="gecSayfa('rabbit-page')">🐇 KARNAVAL TAVŞAN AVCISI</button>
+            <button class="btn-game" style="background:#10b981;" onclick="gecSayfa('rabbit-page')">🐇 KARNAVAL TAVŞAN AVCILA</button>
 
             <div class="review-section">
                 <div class="beta-warning-box">
@@ -160,23 +178,23 @@
         function devGiris() {
             let sifre = prompt("Geliştirici şifresini giriniz:");
             if (sifre === "1234") {
-                window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"; // Rick Roll Videosu
+                window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
             } else if (sifre !== null) {
                 alert("Hatalı Şifre!");
             }
         }
 
         // --- MÜZİK SİSTEMİ ---
-        let audioPlayer = document.getElementById('bg-audio');
+        let widget = SC.Widget(document.getElementById('sc-player'));
         let isMusicPlaying = false;
         function toggleMusic() {
             let btn = document.getElementById('music-btn');
             if (isMusicPlaying) {
-                audioPlayer.pause();
+                widget.pause();
                 btn.innerHTML = '🎵 Müzik Aç';
                 btn.style.background = '#e11d48';
             } else {
-                audioPlayer.play().catch(e => console.log("Müzik engellendi:", e));
+                widget.play();
                 btn.innerHTML = '⏸️ Müziği Durdur';
                 btn.style.background = '#10b981';
             }
@@ -259,7 +277,7 @@
             const delik = rastgeleDelik();
             delik.classList.add('aktif');
             
-            let kalmaSuresi = Math.random() * 600 + 600; // 0.6sn ile 1.2sn arası kalır
+            let kalmaSuresi = Math.random() * 600 + 600;
             moleZamanlayici = setTimeout(() => {
                 delik.classList.remove('aktif');
                 tavsanFirla();
@@ -272,10 +290,8 @@
             
             tavsanSkor += 10;
             document.getElementById('rabbit-score').innerText = tavsanSkor;
-            
             delik.classList.remove('aktif');
             
-            // BOM! Efektini tetikle
             const bom = delik.querySelector('.bom-efekt');
             bom.style.display = 'block';
             setTimeout(() => { bom.style.display = 'none'; }, 400);
@@ -289,7 +305,7 @@
             document.querySelectorAll('.delik').forEach(d => d.classList.remove('aktif'));
         }
 
-        // --- MİNİGAME 1: AI ÇİZİM MOTORU (ESKİ KARARLI SÜRÜM) ---
+        // --- MİNİGAME 1: AI ÇİZİM MOTORU ---
         const canvas = document.getElementById('paintCanvas');
         const ctx = canvas.getContext('2d');
         let drawing = false;
