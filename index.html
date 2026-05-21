@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Qwertz'in Dünyası</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="https://w.soundcloud.com/player/api.js"></script>
     <style>
         :root { --main-bg: #0f172a; --accent: #00ff88; --glass: rgba(255, 255, 255, 0.05); }
         body { 
@@ -21,7 +20,7 @@
         h1 { color: var(--accent); font-size: 24px; text-shadow: 0 0 15px rgba(0,255,136,0.3); margin-top: 0; }
         
         button { padding: 12px 25px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 16px; }
-        .btn-game { background: #f59e0b; color: #fff; width: 80%; margin-top: 15px; font-size: 18px; }
+        .btn-game { background: #f59e0b; color: #fff; width: 80%; margin-top: 10px; font-size: 16px; }
         .btn-evet { background: #10b981; color: #fff; flex: 1; }
         .btn-hayir { background: #ef4444; color: #fff; flex: 1; }
         .btn-control { background: #3b82f6; color: white; width: 100%; margin-top: 15px; }
@@ -35,52 +34,52 @@
         .color-box.selected { border-color: #ffffff; transform: scale(1.15); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
 
         .game-meta { display: flex; justify-content: space-between; width: 100%; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
-        #timer { color: #ef4444; }
-        #ai-task { color: #38ef7d; font-size: 20px; text-shadow: 0 0 10px rgba(56,239,125,0.4); }
+        #timer, #rabbit-timer { color: #ef4444; }
+        #ai-task, #rabbit-score { color: #38ef7d; font-size: 20px; text-shadow: 0 0 10px rgba(56,239,125,0.4); }
 
         .overlay-error { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); border-radius: 25px; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
         .crossmark { font-size: 80px; color: #ef4444; }
 
         /* BETA TEST UYARI BÖLÜMÜ */
-        .review-section { margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
-        .beta-warning-box { background: rgba(59, 130, 246, 0.15); border: 1px dashed #3b82f6; color: #93c5fd; padding: 15px; border-radius: 15px; font-size: 15px; font-weight: 500; text-align: center; letter-spacing: 0.5px; }
+        .review-section { margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
+        .beta-warning-box { background: rgba(59, 130, 246, 0.15); border: 1px dashed #3b82f6; color: #93c5fd; padding: 12px; border-radius: 15px; font-size: 14px; text-align: center; }
+
+        /* ANKET SONUÇLARI STİLİ */
+        .anket-sonuc { display: flex; justify-content: space-around; margin-top: 15px; font-size: 15px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; }
+        .sonuc-evet { color: #34d399; }
+        .sonuc-hayir { color: #f87171; }
+
+        /* SOL ÜST KÖŞE GELİŞTİRİCİ BUTONU */
+        .dev-btn { position: fixed; top: 20px; left: 20px; background: #4f46e5; color: white; border: none; border-radius: 50px; padding: 10px 20px; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); z-index: 9999; font-weight: bold; }
 
         /* SAĞ ALT KÖŞE MÜZİK BUTONU */
-        .floating-music-btn {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            background: #e11d48;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 15px 25px;
-            font-size: 16px;
-            cursor: pointer;
-            box-shadow: 0 5px 20px rgba(225, 29, 72, 0.4);
-            z-index: 9999;
-            transition: 0.3s;
-        }
+        .floating-music-btn { position: fixed; bottom: 25px; right: 25px; background: #e11d48; color: white; border: none; border-radius: 50px; padding: 15px 25px; font-size: 16px; cursor: pointer; box-shadow: 0 5px 20px rgba(225, 29, 72, 0.4); z-index: 9999; transition: 0.3s; }
+
+        /* ŞEFFAF ARKA PLAN YAZISI */
+        .watermark { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 13px; color: rgba(255, 255, 255, 0.15); font-weight: bold; pointer-events: none; z-index: 999; letter-spacing: 1px; }
+
+        /* TARLA VE TAVŞAN OYUNU DİZAYNI */
+        .tarla-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; background: #1e3a1e; padding: 15px; border-radius: 20px; border: 4px solid #3f6212; }
+        .delik { height: 90px; background: #78350f; border-radius: 50% / 30%; position: relative; overflow: hidden; box-shadow: inset 0 10px 10px rgba(0,0,0,0.6); }
+        .tavsan { width: 70px; height: 70px; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="60" r="25" fill="%23d1d5db"/><circle cx="40" cy="55" r="3" fill="black"/><circle cx="60" cy="55" r="3" fill="black"/><ellipse cx="38" cy="25" rx="8" ry="22" fill="%23d1d5db"/><ellipse cx="38" cy="25" rx="4" ry="15" fill="%23f472b6"/><ellipse cx="62" cy="25" rx="8" ry="22" fill="%23d1d5db"/><ellipse cx="62" cy="25" rx="4" ry="15" fill="%23f472b6"/><circle cx="50" cy="62" r="4" fill="%23f472b6"/></svg>') no-repeat center bottom; position: absolute; bottom: -80px; left: 50%; transform: translateX(-50%); transition: bottom 0.2s ease; cursor: pointer; }
+        .delik.aktif .tavsan { bottom: 5px; }
         
-        /* SoundCloud oynatıcısını tamamen gizleyen alan */
-        #sc-container {
-            position: fixed;
-            top: -9999px;
-            left: -9999px;
-            width: 1px;
-            height: 1px;
-            opacity: 0;
-        }
+        /* BOM Efekti */
+        .bom-efekt { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #f59e0b; font-weight: 900; font-size: 24px; text-shadow: 0 0 10px #ef4444; animation: bomAnim 0.4s ease-out forwards; pointer-events: none; display: none; }
+        @keyframes bomAnim { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
     </style>
 </head>
 <body>
 
     <div class="bg-glow"></div>
-
-    <div id="sc-container">
-        <iframe id="sc-player" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/335122134&auto_play=false" scrolling="no" frameborder="no" allow="autoplay"></iframe>
-    </div>
     
+    <div class="watermark">mustafassahin5546-creator tarafından yapılmıştır</div>
+
+    <button class="dev-btn" onclick="devGiris()">🛠️ Geliştirici</button>
+
+    <audio id="bg-audio" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" type="audio/mpeg">
+    </audio>
     <button id="music-btn" class="floating-music-btn" onclick="toggleMusic()">🎵 Müzik Aç</button>
 
     <div id="survey-page" class="page active">
@@ -88,107 +87,223 @@
             <h1>Qwertz'in Websitesine Hoşgeldiniz!</h1>
             <p style="font-size: 18px; color: #cbd5e1;">Web sitem güzel olmuş mu?</p>
             
-            <div style="display: flex; gap: 15px; width: 80%; margin: 0 auto 20px auto;">
+            <div style="display: flex; gap: 15px; width: 80%; margin: 0 auto 10px auto;">
                 <button id="btn-evet" class="btn-evet" onclick="oyVer('evet')">EVET 👍</button>
                 <button id="btn-hayir" class="btn-hayir" onclick="oyVer('hayir')">HAYIR 👎</button>
             </div>
+
+            <div class="anket-sonuc">
+                <div class="sonuc-evet">Evet Oyları: <span id="evet-sayi">0</span></div>
+                <div class="sonuc-hayir">Hayır Oyları: <span id="hayir-sayi">0</span></div>
+            </div>
+
             <button class="btn-game" onclick="gecSayfa('game-page')">🎮 YAPAY ZEKA ÇİZİM OYUNU</button>
+            <button class="btn-game" style="background:#10b981;" onclick="gecSayfa('rabbit-page')">🐇 KARNAVAL TAVŞAN AVCISI</button>
 
             <div class="review-section">
                 <div class="beta-warning-box">
                     🛠️ Yorum yapma sistemi beta testindedir.
                 </div>
             </div>
-
         </div>
     </div>
 
     <div id="game-page" class="page">
         <div class="container">
             <h1>AI Çabuk Çiz!</h1>
-            
             <div class="game-meta">
                 <div>Süre: <span id="timer">60</span>s</div>
                 <div>Görev: <span id="ai-task">-</span></div>
             </div>
-
             <canvas id="paintCanvas" width="300" height="300"></canvas>
-
             <div class="color-palette">
                 <div class="color-box selected" style="background: #0f172a;" onclick="setRenk('#0f172a', this)"></div>
                 <div class="color-box" style="background: #ef4444;" onclick="setRenk('#ef4444', this)"></div>
                 <div class="color-box" style="background: #f59e0b;" onclick="setRenk('#f59e0b', this)"></div>
                 <div class="color-box" style="background: #10b981;" onclick="setRenk('#10b981', this)"></div>
                 <div class="color-box" style="background: #3b82f6;" onclick="setRenk('#3b82f6', this)"></div>
-                <div class="color-box" style="background: #a855f7;" onclick="setRenk('#a855f7', this)"></div>
             </div>
-
             <button class="btn-control" onclick="aiTarama()">🔍 YAPAY ZEKA KONTROL ETSİN</button>
             <button class="btn-clear" onclick="clearCanvas()">🗑️ Temizle</button>
             <button class="btn-back" onclick="gecSayfa('survey-page')">← Geri Dön</button>
-
             <div id="error-screen" class="overlay-error">
                 <div class="crossmark">❌</div>
                 <h2 style="color: #ef4444;">Yapay Zeka Benzetemedi!</h2>
-                <p style="color: #cbd5e1; padding: 0 20px;">AI: "Bu hiç söylediğim şeye benzemiyor, tekrar dene!"</p>
-                <button onclick="yenidenDene()" style="background: #f59e0b; color: white; margin-top: 15px;">🔄 Rastgele Yeni Görev Al</button>
+                <button onclick="yenidenDene()" style="background: #f59e0b; color: white; margin-top: 15px;">🔄 Yeni Görev Al</button>
             </div>
         </div>
     </div>
 
-    <script>
-        // --- SOUNDCLOUD SES KONTROL MOTORU ---
-        let widget = SC.Widget(document.getElementById('sc-player'));
-        let isMusicPlaying = false;
+    <div id="rabbit-page" class="page">
+        <div class="container">
+            <h1>🐇 Tavşan Avı Karnavalı</h1>
+            <div class="game-meta">
+                <div>Süre: <span id="rabbit-timer">30</span>s</div>
+                <div>Skor: <span id="rabbit-score">0</span></div>
+            </div>
 
+            <div class="tarla-grid">
+                <div class="delik" id="hole-0"><div class="tavsan" onclick="tavsanVur(0)"></div><div class="bom-efekt">BOM!💥</div></div>
+                <div class="delik" id="hole-1"><div class="tavsan" onclick="tavsanVur(1)"></div><div class="bom-efekt">BOM!💥</div></div>
+                <div class="delik" id="hole-2"><div class="tavsan" onclick="tavsanVur(2)"></div><div class="bom-efekt">BOM!💥</div></div>
+                <div class="delik" id="hole-3"><div class="tavsan" onclick="tavsanVur(3)"></div><div class="bom-efekt">BOM!💥</div></div>
+                <div class="delik" id="hole-4"><div class="tavsan" onclick="tavsanVur(4)"></div><div class="bom-efekt">BOM!💥</div></div>
+                <div class="delik" id="hole-5"><div class="tavsan" onclick="tavsanVur(5)"></div><div class="bom-efekt">BOM!💥</div></div>
+            </div>
+
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
+        </div>
+    </div>
+
+    <script>
+        // --- GELİŞTİRİCİ GİRİŞİ (RICK ROLL) ---
+        function devGiris() {
+            let sifre = prompt("Geliştirici şifresini giriniz:");
+            if (sifre === "1234") {
+                window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"; // Rick Roll Videosu
+            } else if (sifre !== null) {
+                alert("Hatalı Şifre!");
+            }
+        }
+
+        // --- MÜZİK SİSTEMİ ---
+        let audioPlayer = document.getElementById('bg-audio');
+        let isMusicPlaying = false;
         function toggleMusic() {
             let btn = document.getElementById('music-btn');
-            
-            if (!isMusicPlaying) {
-                widget.play();
-                btn.innerHTML = '⏸️ Müziği Durdur';
-                btn.style.background = '#10b981';
-            } else {
-                widget.pause();
+            if (isMusicPlaying) {
+                audioPlayer.pause();
                 btn.innerHTML = '🎵 Müzik Aç';
                 btn.style.background = '#e11d48';
+            } else {
+                audioPlayer.play().catch(e => console.log("Müzik engellendi:", e));
+                btn.innerHTML = '⏸️ Müziği Durdur';
+                btn.style.background = '#10b981';
             }
             isMusicPlaying = !isMusicPlaying;
         }
 
-        // --- SAYFA VE OYUN MOTORU ---
+        // --- KALICI ANKET SİSTEMİ (LOCALSTORAGE) ---
+        window.onload = function() {
+            let evetOylari = localStorage.getItem('site_evet') || 0;
+            let hayirOylari = localStorage.getItem('site_hayir') || 0;
+            document.getElementById('evet-sayi').innerText = evetOylari;
+            document.getElementById('hayir-sayi').innerText = hayirOylari;
+            
+            if(localStorage.getItem('oy_kullandi') === 'true') {
+                document.getElementById('btn-evet').disabled = true;
+                document.getElementById('btn-hayir').disabled = true;
+            }
+        };
+
+        function oyVer(tip) {
+            confetti({particleCount: 80, spread: 60});
+            let mevcutOy = parseInt(localStorage.getItem('site_' + tip) || 0);
+            localStorage.setItem('site_' + tip, mevcutOy + 1);
+            localStorage.setItem('oy_kullandi', 'true');
+            
+            document.getElementById(tip + '-sayi').innerText = mevcutOy + 1;
+            document.getElementById('btn-evet').disabled = true;
+            document.getElementById('btn-hayir').disabled = true;
+            alert("Oyunuz başarıyla kaydedildi!");
+        }
+
+        // --- SAYFA GEÇİŞ SİSTEMLERİ ---
         function gecSayfa(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             if(id === 'game-page') oyunBaslat();
-            else oynaBitir();
+            else if(id === 'rabbit-page') tavsanOyunuBaslat();
+            else { oynaBitir(); tavsanOyunuBitir(); }
         }
 
-        function oyVer(tip) {
-            confetti({particleCount: 80, spread: 60});
-            document.getElementById('btn-evet').disabled = true;
-            document.getElementById('btn-hayir').disabled = true;
-            alert("Oyunuz kaydedildi, teşekkürler!");
+        // --- MİNİGAME 2: TAVŞAN YAKALAMA MOTORU ---
+        let tavsanSkor = 0;
+        let tavsanSuresi = 30;
+        let tavsanZamanlayici;
+        let moleZamanlayici;
+        let sonDelik;
+
+        function tavsanOyunuBaslat() {
+            tavsanSkor = 0;
+            tavsanSuresi = 30;
+            document.getElementById('rabbit-score').innerText = tavsanSkor;
+            document.getElementById('rabbit-timer').innerText = tavsanSuresi;
+            
+            clearInterval(tavsanZamanlayici);
+            clearInterval(moleZamanlayici);
+            
+            tavsanZamanlayici = setInterval(() => {
+                tavsanSuresi--;
+                document.getElementById('rabbit-timer').innerText = tavsanSuresi;
+                if(tavsanSuresi <= 0) {
+                    tavsanOyunuBitir();
+                    alert("Oyun Bitti! Toplam Skorun: " + tavsanSkor);
+                    gecSayfa('survey-page');
+                }
+            }, 1000);
+
+            tavsanFirla();
         }
 
+        function rastgeleDelik() {
+            const delikler = document.querySelectorAll('.delik');
+            const idx = Math.floor(Math.random() * delikler.length);
+            if (idx === sonDelik) return rastgeleDelik();
+            sonDelik = idx;
+            return delikler[idx];
+        }
+
+        function tavsanFirla() {
+            if (tavsanSuresi <= 0) return;
+            const delik = rastgeleDelik();
+            delik.classList.add('aktif');
+            
+            let kalmaSuresi = Math.random() * 600 + 600; // 0.6sn ile 1.2sn arası kalır
+            moleZamanlayici = setTimeout(() => {
+                delik.classList.remove('aktif');
+                tavsanFirla();
+            }, kalmaSuresi);
+        }
+
+        function tavsanVur(index) {
+            const delik = document.getElementById('hole-' + index);
+            if(!delik.classList.contains('aktif')) return;
+            
+            tavsanSkor += 10;
+            document.getElementById('rabbit-score').innerText = tavsanSkor;
+            
+            delik.classList.remove('aktif');
+            
+            // BOM! Efektini tetikle
+            const bom = delik.querySelector('.bom-efekt');
+            bom.style.display = 'block';
+            setTimeout(() => { bom.style.display = 'none'; }, 400);
+            
+            confetti({particleCount: 10, origin: { y: 0.6 }});
+        }
+
+        function tavsanOyunuBitir() {
+            clearInterval(tavsanZamanlayici);
+            clearTimeout(moleZamanlayici);
+            document.querySelectorAll('.delik').forEach(d => d.classList.remove('aktif'));
+        }
+
+        // --- MİNİGAME 1: AI ÇİZİM MOTORU (ESKİ KARARLI SÜRÜM) ---
         const canvas = document.getElementById('paintCanvas');
         const ctx = canvas.getContext('2d');
         let drawing = false;
         let sure = 60;
         let zamanlayici;
-        const gorevler = ["Mandalina", "Çubuk Adam", "Ev", "Gözlük", "Güneş", "Araba", "Kedi", "Ağaç"];
+        const gorevler = ["Mandalina", "Çubuk Adam", "Ev", "Gözlük", "Güneş", "Araba"];
         let aktifGorev = "";
 
-        ctx.lineWidth = 6;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = '#0f172a';
-
+        ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a';
         function setRenk(yeniRenk, eleman) {
             ctx.strokeStyle = yeniRenk;
             document.querySelectorAll('.color-box').forEach(box => box.classList.remove('selected'));
             eleman.classList.add('selected');
         }
-
         canvas.addEventListener('mousedown', () => drawing = true);
         canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
         canvas.addEventListener('mousemove', draw);
@@ -201,62 +316,40 @@
             const rect = canvas.getBoundingClientRect();
             const x = (e.clientX || e.pageX) - rect.left;
             const y = (e.clientY || e.pageY) - rect.top;
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, y);
+            ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y);
         }
-
-        document.getElementById('paintCanvas').addEventListener('touchmove', function(e) {
-            e.preventDefault();
-        }, { passive: false });
-
         function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
-
         function aiKonus(metin) {
             if ('speechSynthesis' in window) {
-                const speech = new SpeechSynthesisUtterance(metin);
-                speech.lang = 'tr-TR';
-                window.speechSynthesis.speak(speech);
+                const speech = new SpeechSynthesisUtterance(metin); speech.lang = 'tr-TR'; window.speechSynthesis.speak(speech);
             }
         }
-
         function oyunBaslat() {
             clearCanvas();
             document.getElementById('error-screen').style.display = 'none';
             aktifGorev = gorevler[Math.floor(Math.random() * gorevler.length)];
             document.getElementById('ai-task').innerText = aktifGorev;
             setTimeout(() => { aiKonus("Lütfen ekrana bir " + aktifGorev + " çiziniz."); }, 300);
-            sure = 60;
-            document.getElementById('timer').innerText = sure;
+            sure = 60; document.getElementById('timer').innerText = sure;
             clearInterval(zamanlayici);
             zamanlayici = setInterval(() => {
-                sure--;
-                document.getElementById('timer').innerText = sure;
+                sure--; document.getElementById('timer').innerText = sure;
                 if(sure <= 0) { clearInterval(zamanlayici); aiTarama(); }
             }, 1000);
         }
-
         function oynaBitir() { clearInterval(zamanlayici); }
-
         function aiTarama() {
             clearInterval(zamanlayici);
-            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            let cizilen = 0;
-            for (let i = 0; i < imgData.data.length; i += 4) { if (imgData.data[i+3] > 0) cizilen++; }
-            if (cizilen < 50) { aiKonus("Boş ekranı tarayamam."); oyunBaslat(); return; }
-
             if (Math.random() > 0.45) {
                 aiKonus("Harika! Bu bir " + aktifGorev);
-                confetti({particleCount: 150, spread: 80});
-                alert("Yapay zeka resmi bild: " + aktifGorev);
+                confetti({particleCount: 100, spread: 60});
+                alert("Yapay zeka bild: " + aktifGorev);
                 oyunBaslat();
             } else {
                 aiKonus("Maalesef benzetemedim.");
                 document.getElementById('error-screen').style.display = 'flex';
             }
         }
-
         function yenidenDene() { oyunBaslat(); }
     </script>
 </body>
