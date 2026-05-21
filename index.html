@@ -90,6 +90,18 @@
         .mine-cell:hover { background: #475569; }
         .mine-cell.revealed { background: #1e293b; cursor: default; }
         .mine-cell.mine { background: #ef4444; }
+
+        /* ÖZGÜRCE RESİM YAP STİLLERİ (YENİ) */
+        #freeCanvas { background: #ffffff; border-radius: 10px; border: 3px solid #334155; cursor: crosshair; touch-action: none; margin: 15px 0; width: 100%; max-width: 800px; height: auto; aspect-ratio: 16/9; box-shadow: 0 0 20px rgba(0,0,0,0.4); }
+        .freedraw-toolbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; }
+        .fd-btn-tool { padding: 8px 15px; font-size: 14px; border-radius: 8px; background: #475569; color: white; border: 2px solid transparent; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .fd-btn-tool:hover { background: #64748b; }
+        .fd-btn-tool.active-tool { background: #3b82f6; border-color: #ffffff; box-shadow: 0 0 10px rgba(59, 130, 246, 0.6); }
+        .fd-control-group { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 8px; }
+        .fd-palette { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; }
+        .fd-color-box { width: 25px; height: 25px; border-radius: 50%; cursor: pointer; border: 2px solid #cbd5e1; transition: 0.2s; }
+        .fd-color-box:hover { transform: scale(1.2); }
+        select, input[type="range"], input[type="color"] { cursor: pointer; }
     </style>
 </head>
 <body>
@@ -105,6 +117,7 @@
     </audio>
     <button id="music-btn" class="floating-music-btn" onclick="toggleMusic()">🎵 Müzik Aç</button>
 
+    <!-- ANA MENÜ -->
     <div id="survey-page" class="page active">
         <div class="container">
             <h1>Qwertz'in Websitesine Hoşgeldiniz!</h1>
@@ -120,6 +133,8 @@
                 <div class="sonuc-hayir">Hayır Oyları: <span id="hayir-sayi">0</span></div>
             </div>
 
+            <!-- YENİ BUTON EKLENDİ -->
+            <button class="btn-game" style="background:#db2777;" onclick="gecSayfa('freedraw-page')">🎨 ÖZGÜRCE RESİM YAP</button>
             <button class="btn-game" onclick="gecSayfa('game-page')">🎮 YAPAY ZEKA ÇİZİM OYUNU</button>
             <button class="btn-game" style="background:#10b981;" onclick="gecSayfa('rabbit-page')">🐇 KARNAVAL TAVŞAN AVCISI</button>
             <button class="btn-game" style="background:#8b5cf6;" onclick="gecSayfa('memory-page')">🎴 HAFIZA KARTLARI OYUNU</button>
@@ -134,6 +149,61 @@
         </div>
     </div>
 
+    <!-- YENİ: ÖZGÜRCE RESİM YAP SAYFASI -->
+    <div id="freedraw-page" class="page">
+        <div class="container" style="max-width: 850px;">
+            <h1>🎨 Özgürce Resim Yap</h1>
+            
+            <div class="freedraw-toolbar">
+                <button id="btn-fd-brush" onclick="setFdTool('brush')" class="fd-btn-tool active-tool">🖌️ Fırça</button>
+                <button id="btn-fd-eraser" onclick="setFdTool('eraser')" class="fd-btn-tool">🧼 Silgi</button>
+                <button id="btn-fd-fill" onclick="setFdTool('fill')" class="fd-btn-tool">🪣 Doldur</button>
+                
+                <div class="fd-control-group">
+                    <label style="font-size: 14px;">Kalınlık:</label>
+                    <input type="range" id="fdSize" min="1" max="50" value="5" style="width: 80px;">
+                </div>
+                
+                <div class="fd-control-group">
+                    <label style="font-size: 14px;">Şekil:</label>
+                    <select id="fdShape" style="border-radius: 5px; padding: 2px;">
+                        <option value="round">Yuvarlak</option>
+                        <option value="square">Kare</option>
+                    </select>
+                </div>
+                
+                <div class="fd-control-group">
+                    <input type="color" id="fdColor" value="#000000">
+                </div>
+
+                <button class="fd-btn-tool" style="background: #ef4444;" onclick="clearFreeCanvas()">🗑️ Temizle</button>
+            </div>
+
+            <!-- Hızlı Renk Paleti -->
+            <div class="fd-palette">
+                <div class="fd-color-box" style="background: #000000;" onclick="setFdColor('#000000')"></div>
+                <div class="fd-color-box" style="background: #ffffff;" onclick="setFdColor('#ffffff')"></div>
+                <div class="fd-color-box" style="background: #94a3b8;" onclick="setFdColor('#94a3b8')"></div>
+                <div class="fd-color-box" style="background: #ef4444;" onclick="setFdColor('#ef4444')"></div>
+                <div class="fd-color-box" style="background: #f97316;" onclick="setFdColor('#f97316')"></div>
+                <div class="fd-color-box" style="background: #f59e0b;" onclick="setFdColor('#f59e0b')"></div>
+                <div class="fd-color-box" style="background: #84cc16;" onclick="setFdColor('#84cc16')"></div>
+                <div class="fd-color-box" style="background: #22c55e;" onclick="setFdColor('#22c55e')"></div>
+                <div class="fd-color-box" style="background: #06b6d4;" onclick="setFdColor('#06b6d4')"></div>
+                <div class="fd-color-box" style="background: #3b82f6;" onclick="setFdColor('#3b82f6')"></div>
+                <div class="fd-color-box" style="background: #8b5cf6;" onclick="setFdColor('#8b5cf6')"></div>
+                <div class="fd-color-box" style="background: #d946ef;" onclick="setFdColor('#d946ef')"></div>
+                <div class="fd-color-box" style="background: #ec4899;" onclick="setFdColor('#ec4899')"></div>
+                <div class="fd-color-box" style="background: #78350f;" onclick="setFdColor('#78350f')"></div>
+            </div>
+
+            <canvas id="freeCanvas" width="800" height="450"></canvas>
+            
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
+        </div>
+    </div>
+
+    <!-- DİĞER SAYFALAR (Aynı Kaldı) -->
     <div id="memory-page" class="page">
         <div class="container">
             <h1>🎴 Eşleri Bul!</h1>
@@ -303,7 +373,202 @@
             else if(id === 'memory-page') hafizaOyunuBaslat();
             else if(id === 'gd-page') gdOyunuBaslat();
             else if(id === 'mines-page') minesOyunuBaslat();
+            else if(id === 'freedraw-page') initFreeCanvas(); // Paint alanı
         }
+
+        // -------------------------------------------------------------
+        // --- YENİ EKLENEN MOTOR: ÖZGÜRCE RESİM YAP (MS PAINT GİBİ) ---
+        // -------------------------------------------------------------
+        const fdCanvas = document.getElementById('freeCanvas');
+        // Kova doldurma aracı için willReadFrequently optimizasyonu
+        const fdCtx = fdCanvas.getContext('2d', { willReadFrequently: true });
+        let isFdDrawing = false;
+        let fdCurrentTool = 'brush'; // 'brush', 'eraser', 'fill'
+        let isFdInitialized = false;
+
+        function initFreeCanvas() {
+            // Sadece ilk açılışta veya bilerek temizlendiğinde arkaplanı beyaz yap
+            if(!isFdInitialized) {
+                fdCtx.fillStyle = "#ffffff";
+                fdCtx.fillRect(0, 0, fdCanvas.width, fdCanvas.height);
+                isFdInitialized = true;
+            }
+        }
+
+        function setFdTool(tool) {
+            fdCurrentTool = tool;
+            document.querySelectorAll('.fd-btn-tool').forEach(btn => btn.classList.remove('active-tool'));
+            document.getElementById('btn-fd-' + tool).classList.add('active-tool');
+        }
+
+        function setFdColor(hexColor) {
+            document.getElementById('fdColor').value = hexColor;
+        }
+
+        function clearFreeCanvas() {
+            if(confirm("Tüm çizimi silmek istediğinize emin misiniz?")) {
+                fdCtx.fillStyle = "#ffffff";
+                fdCtx.fillRect(0, 0, fdCanvas.width, fdCanvas.height);
+            }
+        }
+
+        function getFdPos(e) {
+            const rect = fdCanvas.getBoundingClientRect();
+            const scaleX = fdCanvas.width / rect.width;
+            const scaleY = fdCanvas.height / rect.height;
+
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+
+            return {
+                x: Math.floor((clientX - rect.left) * scaleX),
+                y: Math.floor((clientY - rect.top) * scaleY)
+            };
+        }
+
+        fdCanvas.addEventListener('mousedown', fdStart);
+        fdCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); fdStart(e); }, { passive: false });
+
+        fdCanvas.addEventListener('mouseup', fdEnd);
+        fdCanvas.addEventListener('touchend', fdEnd);
+        fdCanvas.addEventListener('mouseleave', fdEnd);
+
+        fdCanvas.addEventListener('mousemove', fdMove);
+        fdCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); fdMove(e); }, { passive: false });
+
+        function fdStart(e) {
+            const pos = getFdPos(e);
+
+            if (fdCurrentTool === 'fill') {
+                const colorHex = document.getElementById('fdColor').value;
+                floodFill(pos.x, pos.y, colorHex);
+                return;
+            }
+
+            isFdDrawing = true;
+            fdCtx.beginPath();
+            fdCtx.moveTo(pos.x, pos.y);
+        }
+
+        function fdEnd() {
+            if (isFdDrawing) {
+                isFdDrawing = false;
+                fdCtx.beginPath();
+            }
+        }
+
+        function fdMove(e) {
+            if (!isFdDrawing) return;
+            const pos = getFdPos(e);
+
+            const size = document.getElementById('fdSize').value;
+            const shape = document.getElementById('fdShape').value;
+            const color = document.getElementById('fdColor').value;
+
+            fdCtx.lineWidth = size;
+            fdCtx.lineCap = shape === 'round' ? 'round' : 'square';
+            fdCtx.lineJoin = shape === 'round' ? 'round' : 'miter';
+
+            if (fdCurrentTool === 'eraser') {
+                fdCtx.strokeStyle = '#ffffff'; // Silgi tahtayı beyaza boyar
+            } else {
+                fdCtx.strokeStyle = color;
+            }
+
+            fdCtx.lineTo(pos.x, pos.y);
+            fdCtx.stroke();
+            fdCtx.beginPath();
+            fdCtx.moveTo(pos.x, pos.y);
+        }
+
+        // ---- KOVA İLE DOLDURMA (FLOOD FILL ALGORİTMASI) ----
+        function hexToRgb(hex) {
+            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 0, g: 0, b: 0 };
+        }
+
+        function matchColor(data, pos, r, g, b, a) {
+            return data[pos] === r && data[pos + 1] === g && data[pos + 2] === b && data[pos + 3] === a;
+        }
+
+        function floodFill(startX, startY, fillColorHex) {
+            const imgData = fdCtx.getImageData(0, 0, fdCanvas.width, fdCanvas.height);
+            const data = imgData.data;
+            const width = fdCanvas.width;
+            const height = fdCanvas.height;
+            const targetColor = hexToRgb(fillColorHex);
+
+            const startPos = (startY * width + startX) * 4;
+            const startR = data[startPos];
+            const startG = data[startPos + 1];
+            const startB = data[startPos + 2];
+            const startA = data[startPos + 3];
+
+            // Tıklanılan yer zaten aynı renkse algoritmayı durdur
+            if (startR === targetColor.r && startG === targetColor.g && startB === targetColor.b && startA === 255) {
+                return; 
+            }
+
+            const stack = [[startX, startY]];
+
+            while (stack.length > 0) {
+                const [x, y] = stack.pop();
+                let pos = (y * width + x) * 4;
+
+                let currentY = y;
+                // Yukarıya doğru çıkabildiğin kadar çık
+                while (currentY >= 0 && matchColor(data, pos, startR, startG, startB, startA)) {
+                    currentY--;
+                    pos -= width * 4;
+                }
+
+                pos += width * 4;
+                currentY++;
+
+                let reachLeft = false;
+                let reachRight = false;
+
+                // Aşağıya doğru inerken renkleri doldur ve yan dalları yığına (stack) at
+                while (currentY < height && matchColor(data, pos, startR, startG, startB, startA)) {
+                    data[pos] = targetColor.r;
+                    data[pos + 1] = targetColor.g;
+                    data[pos + 2] = targetColor.b;
+                    data[pos + 3] = 255;
+
+                    if (x > 0) {
+                        if (matchColor(data, pos - 4, startR, startG, startB, startA)) {
+                            if (!reachLeft) {
+                                stack.push([x - 1, currentY]);
+                                reachLeft = true;
+                            }
+                        } else if (reachLeft) {
+                            reachLeft = false;
+                        }
+                    }
+
+                    if (x < width - 1) {
+                        if (matchColor(data, pos + 4, startR, startG, startB, startA)) {
+                            if (!reachRight) {
+                                stack.push([x + 1, currentY]);
+                                reachRight = true;
+                            }
+                        } else if (reachRight) {
+                            reachRight = false;
+                        }
+                    }
+
+                    currentY++;
+                    pos += width * 4;
+                }
+            }
+            fdCtx.putImageData(imgData, 0, 0);
+        }
+        // -------------------------------------------------------------
 
         // --- MİNİGAME 3: HAFIZA KARTLARI OYUNU ---
         const memoryEmojis = ['🦁', '🐸', '🦄', '🐷', '🦊', '🐼', '🐯', '🐮'];
@@ -438,7 +703,6 @@
             const delik = rastgeleDelik();
             delik.classList.add('aktif');
             
-            // Hız kontrolü: 300 puanı aşınca tavşanlar deliklerde yarı yarıya daha az bekler (Hızlanır)
             let kalmaSuresi = Math.random() * 600 + 600; 
             if (tavsanSkor > 300) {
                 kalmaSuresi = Math.random() * 300 + 300; 
@@ -457,7 +721,6 @@
             tavsanSkor += 10;
             document.getElementById('rabbit-score').innerText = tavsanSkor;
             
-            // Her başarılı vuruşta süreyi 10 saniye arttır
             tavsanSuresi += 10;
             document.getElementById('rabbit-timer').innerText = tavsanSuresi;
             
@@ -483,12 +746,11 @@
         let sure = 60;
         let zamanlayici;
         
-        // Kademeli zorluk havuzları
         const gorevlerKolay = ["Mandalina", "Çubuk Adam", "Güneş", "Kare", "Daire"];
         const gorevlerOrta = ["Ev", "Gözlük", "Ağaç", "Yıldız", "Bulut"];
         const gorevlerZor = ["Dağ", "Bisiklet", "Araba", "Kedi", "Gemi", "Telefon"];
         
-        let cizimSkor = 0; // Doğru tahmin sayısına göre zorluk katlanacak
+        let cizimSkor = 0; 
         let aktifGorev = "";
 
         ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a';
@@ -498,10 +760,8 @@
             eleman.classList.add('selected');
         }
 
-        // Çizim koordinatlarını ayarlamak için yardımcı fonksiyon
         function getPos(e) {
             const rect = canvas.getBoundingClientRect();
-            // X ve Y koordinatlarını canvas'ın gerçek boyutu ile ekrandaki boyutu arasındaki orana göre hesapla
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
 
@@ -557,7 +817,6 @@
             clearCanvas();
             document.getElementById('error-screen').style.display = 'none';
             
-            // Kolaydan zora seçme algoritması
             let secimHavuzu = gorevlerKolay;
             if(cizimSkor >= 4) {
                 secimHavuzu = gorevlerZor;
@@ -567,7 +826,6 @@
 
             aktifGorev = secimHavuzu[Math.floor(Math.random() * secimHavuzu.length)];
             
-            // HATA BURADAYDI, EKRANA YAZDIRMA KODU EKLENDİ
             document.getElementById('ai-task').innerText = aktifGorev;
 
             setTimeout(() => { aiKonus("Lütfen ekrana bir " + aktifGorev + " çiziniz."); }, 300);
@@ -586,7 +844,7 @@
                 aiKonus("Harika! Bu bir " + aktifGorev);
                 confetti({particleCount: 100, spread: 60});
                 alert("Yapay zeka bildi: " + aktifGorev);
-                cizimSkor++; // Zorluğu bir kademe tırmandır
+                cizimSkor++; 
                 oyunBaslat();
             } else {
                 aiKonus("Maalesef benzetemedim.");
@@ -601,14 +859,13 @@
         const gdCtx = gdCanvas.getContext('2d');
         let gdAnimId;
         
-        // Oyun Değişkenleri
         let gdPlayer, gdObstacles, gdGameSpeed, gdDistance, gdActive, gdTotalLength;
         
         function gdOyunuBaslat() {
             gdActive = true;
             gdGameSpeed = 3.2;
             gdDistance = 0;
-            gdTotalLength = 2500; // İlk bölümün uzunluğu (piksel bazlı ilerleme)
+            gdTotalLength = 2500; 
             gdObstacles = [];
             
             gdPlayer = {
@@ -617,19 +874,16 @@
                 isGrounded: true, angle: 0
             };
 
-            // 1. Bölüm Stereo Madness Haritası (Diken Dağılımları)
             const haritaPlanı = [400, 650, 900, 1150, 1350, 1600, 1800, 2050, 2200];
             haritaPlanı.forEach((posX, i) => {
                 let tip = (i % 3 === 0) ? 1 : ((i % 3 === 1) ? 2 : 3);
                 gdObstacles.push({ x: posX, type: tip, width: 20, height: 25, passed: false });
             });
 
-            // Dinleyicileri temizle ve kur
             window.removeEventListener('keydown', gdZiplamaKlavye);
             gdCanvas.removeEventListener('touchstart', gdZiplamaDokunma);
             
             window.addEventListener('keydown', gdZiplamaKlavye);
-            // passive: false eklendi böylece mobilde zıplarken ekran kaymayacak
             gdCanvas.addEventListener('touchstart', gdZiplamaDokunma, { passive: false });
 
             if(gdAnimId) cancelAnimationFrame(gdAnimId);
@@ -649,10 +903,8 @@
         function gdDongu() {
             if (!gdActive) return;
             
-            // Ekranı temizle ve arka planı çiz
             gdCtx.clearRect(0, 0, gdCanvas.width, gdCanvas.height);
             
-            // Yer çizgisi çizimi
             gdCtx.strokeStyle = '#3b82f6';
             gdCtx.lineWidth = 3;
             gdCtx.beginPath();
@@ -660,12 +912,10 @@
             gdCtx.lineTo(gdCanvas.width, 165);
             gdCtx.stroke();
 
-            // İlerleme ve Hızlanma
             gdDistance += gdGameSpeed;
             let yuzde = Math.min(Math.floor((gdDistance / gdTotalLength) * 100), 100);
             document.getElementById('gd-progress').innerText = yuzde + "%";
 
-            // Oyuncu Fizik ve Animasyonu
             gdPlayer.vy += gdPlayer.gravity;
             gdPlayer.y += gdPlayer.vy;
 
@@ -678,7 +928,6 @@
                 gdPlayer.angle += 3.5;
             }
 
-            // Oyuncuyu Çiz (Gözlü Küp)
             gdCtx.save();
             gdCtx.translate(gdPlayer.x + gdPlayer.size/2, gdPlayer.y + gdPlayer.size/2);
             gdCtx.rotate((gdPlayer.angle * Math.PI) / 180);
@@ -694,7 +943,6 @@
             gdCtx.fillRect(2, 2, 6, 6);
             gdCtx.restore();
 
-            // Engelleri Yönet ve Çiz
             for (let i = 0; i < gdObstacles.length; i++) {
                 let obs = gdObstacles[i];
                 obs.x -= gdGameSpeed;
@@ -719,7 +967,6 @@
                 }
                 gdCtx.fill();
 
-                // Çarpışma Testi
                 let oyuncuSag = gdPlayer.x + gdPlayer.size;
                 let oyuncuSol = gdPlayer.x;
                 let oyuncuAlt = gdPlayer.y + gdPlayer.size;
