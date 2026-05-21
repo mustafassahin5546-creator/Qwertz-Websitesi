@@ -52,8 +52,8 @@
         /* SOL ÜST KÖŞE GELİŞTİRİCİ BUTONU */
         .dev-btn { position: fixed; top: 20px; left: 20px; background: #4f46e5; color: white; border: none; border-radius: 50px; padding: 10px 20px; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); z-index: 9999; font-weight: bold; }
 
-        /* SAĞ ÜST KÖŞE MÜZİK BUTONU */
-        .floating-music-btn { position: fixed; top: 20px; right: 20px; background: #e11d48; color: white; border: none; border-radius: 50px; padding: 10px 20px; font-size: 14px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4); z-index: 9999; transition: 0.3s; }
+        /* SAĞ ALT KÖŞE MÜZİK BUTONU */
+        .floating-music-btn { position: fixed; bottom: 25px; right: 25px; background: #e11d48; color: white; border: none; border-radius: 50px; padding: 15px 25px; font-size: 16px; cursor: pointer; box-shadow: 0 5px 20px rgba(225, 29, 72, 0.4); z-index: 9999; transition: 0.3s; }
 
         /* ŞEFFAF ARKA PLAN YAZISI */
         .watermark { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 13px; color: rgba(255, 255, 255, 0.15); font-weight: bold; pointer-events: none; z-index: 999; letter-spacing: 1px; }
@@ -67,6 +67,15 @@
         /* BOM Efekti */
         .bom-efekt { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #f59e0b; font-weight: 900; font-size: 24px; text-shadow: 0 0 10px #ef4444; animation: bomAnim 0.4s ease-out forwards; pointer-events: none; display: none; }
         @keyframes bomAnim { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
+
+        /* KART EŞLEŞTİRME OYUNU DİZAYNI */
+        .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; perspective: 1000px; }
+        .memory-card { width: 100%; aspect-ratio: 1; position: relative; transform-style: preserve-3d; transition: transform 0.5s; cursor: pointer; }
+        .memory-card:active { transform: scale(0.95); transition: transform 0.2s; }
+        .memory-card.flipped { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: 32px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .card-down { background: #334155; border: 2px solid #475569; color: #cbd5e1; font-size: 24px; }
+        .card-up { background: #1e293b; border: 2px solid #3b82f6; transform: rotateY(180deg); }
     </style>
 </head>
 <body>
@@ -99,12 +108,30 @@
 
             <button class="btn-game" onclick="gecSayfa('game-page')">🎮 YAPAY ZEKA ÇİZİM OYUNU</button>
             <button class="btn-game" style="background:#10b981;" onclick="gecSayfa('rabbit-page')">🐇 KARNAVAL TAVŞAN AVCISI</button>
+            <button class="btn-game" style="background:#8b5cf6;" onclick="gecSayfa('memory-page')">🎴 HAFIZA KARTLARI OYUNU</button>
 
             <div class="review-section">
                 <div class="beta-warning-box">
                     🛠️ Yorum yapma sistemi beta testindedir.
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- HAFIZA KARTLARI OYUN SAYFASI -->
+    <div id="memory-page" class="page">
+        <div class="container">
+            <h1>🎴 Eşleri Bul!</h1>
+            <div class="game-meta">
+                <div>Eşleşen: <span id="memory-score" style="color: #38ef7d;">0</span>/8</div>
+            </div>
+            
+            <div class="memory-grid" id="memory-grid-container">
+                <!-- Kartlar Javascript ile buraya eklenecek -->
+            </div>
+
+            <button class="btn-clear" onclick="hafizaOyunuBaslat()">🔄 Yeniden Dağıt</button>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
         </div>
     </div>
 
@@ -160,7 +187,7 @@
         function devGiris() {
             let sifre = prompt("Geliştirici şifresini giriniz:");
             if (sifre === "1234") {
-                window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"; // Rick Roll Videosu
+                window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"; 
             } else if (sifre !== null) {
                 alert("Hatalı Şifre!");
             }
@@ -214,7 +241,99 @@
             document.getElementById(id).classList.add('active');
             if(id === 'game-page') oyunBaslat();
             else if(id === 'rabbit-page') tavsanOyunuBaslat();
+            else if(id === 'memory-page') hafizaOyunuBaslat();
             else { oynaBitir(); tavsanOyunuBitir(); }
+        }
+
+        // --- MİNİGAME 3: HAFIZA KARTLARI OYUNU ---
+        const memoryEmojis = ['🦁', '🐸', '🦄', '🐷', '🦊', '🐼', '🐯', '🐮'];
+        let hasFlippedCard = false;
+        let lockBoard = false;
+        let firstCard, secondCard;
+        let memoryScore = 0;
+
+        function hafizaOyunuBaslat() {
+            const grid = document.getElementById('memory-grid-container');
+            grid.innerHTML = '';
+            memoryScore = 0;
+            document.getElementById('memory-score').innerText = memoryScore;
+            hasFlippedCard = false;
+            lockBoard = false;
+            firstCard = null;
+            secondCard = null;
+
+            let cardArray = [...memoryEmojis, ...memoryEmojis];
+            cardArray.sort(() => 0.5 - Math.random()); // Kartları Karıştır
+
+            cardArray.forEach(emoji => {
+                const card = document.createElement('div');
+                card.classList.add('memory-card');
+                card.dataset.emoji = emoji;
+                card.innerHTML = `
+                    <div class="card-face card-down">❓</div>
+                    <div class="card-face card-up">${emoji}</div>
+                `;
+                card.addEventListener('click', kartCevir);
+                grid.appendChild(card);
+            });
+        }
+
+        function kartCevir() {
+            if (lockBoard) return;
+            if (this === firstCard) return;
+
+            this.classList.add('flipped');
+
+            if (!hasFlippedCard) {
+                hasFlippedCard = true;
+                firstCard = this;
+                return;
+            }
+
+            secondCard = this;
+            eslesmeKontrol();
+        }
+
+        function eslesmeKontrol() {
+            let isMatch = firstCard.dataset.emoji === secondCard.dataset.emoji;
+            if (isMatch) {
+                kartlariDevreDisiBirak();
+            } else {
+                kartlariKapat();
+            }
+        }
+
+        function kartlariDevreDisiBirak() {
+            firstCard.removeEventListener('click', kartCevir);
+            secondCard.removeEventListener('click', kartCevir);
+            
+            memoryScore++;
+            document.getElementById('memory-score').innerText = memoryScore;
+            
+            // Konfeti Efekti
+            confetti({particleCount: 40, spread: 50, origin: { y: 0.7 }});
+
+            if (memoryScore === memoryEmojis.length) {
+                setTimeout(() => {
+                    confetti({particleCount: 250, spread: 100});
+                    alert("Harika! Tüm kartları başarıyla eşleştirdin!");
+                }, 500);
+            }
+            tahtayiSifirla();
+        }
+
+        function kartlariKapat() {
+            lockBoard = true;
+            setTimeout(() => {
+                firstCard.classList.remove('flipped');
+                secondCard.classList.remove('flipped');
+                tahtayiSifirla();
+            }, 1000);
+        }
+
+        function tahtayiSifirla() {
+            [hasFlippedCard, lockBoard] = [false, false];
+            [firstCard, secondCard] = [null, null];
         }
 
         // --- MİNİGAME 2: TAVŞAN YAKALAMA MOTORU ---
@@ -259,7 +378,7 @@
             const delik = rastgeleDelik();
             delik.classList.add('aktif');
             
-            let kalmaSuresi = Math.random() * 600 + 600; // 0.6sn ile 1.2sn arası kalır
+            let kalmaSuresi = Math.random() * 600 + 600; 
             moleZamanlayici = setTimeout(() => {
                 delik.classList.remove('aktif');
                 tavsanFirla();
@@ -275,7 +394,6 @@
             
             delik.classList.remove('aktif');
             
-            // BOM! Efektini tetikle
             const bom = delik.querySelector('.bom-efekt');
             bom.style.display = 'block';
             setTimeout(() => { bom.style.display = 'none'; }, 400);
