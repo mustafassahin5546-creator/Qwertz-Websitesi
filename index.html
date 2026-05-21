@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwertz'in Dünyası</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <style>
+        :root { --main-bg: #0f172a; --accent: #00ff88; --glass: rgba(255, 255, 255, 0.05); }
+        body { 
+            font-family: 'Segoe UI', sans-serif; background: var(--main-bg); color: #fff; 
+            margin: 0; min-height: 100vh; text-align: center;
+            user-select: none; -webkit-user-select: none;
+        }
+        .page { display: none; padding: 20px; }
+        .active { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        .bg-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%); z-index: -1; }
+        
+        .container { background: var(--glass); backdrop-filter: blur(15px); padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); max-width: 500px; width: 90%; position: relative; margin-bottom: 20px; box-sizing: border-box; }
+        h1 { color: var(--accent); font-size: 24px; text-shadow: 0 0 15px rgba(0,255,136,0.3); margin-top: 0; }
+        
+        button { padding: 12px 25px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 16px; }
+        .btn-game { background: #f59e0b; color: #fff; width: 80%; margin-top: 15px; font-size: 18px; }
+        .btn-evet { background: #10b981; color: #fff; flex: 1; }
+        .btn-hayir { background: #ef4444; color: #fff; flex: 1; }
+        .btn-control { background: #3b82f6; color: white; width: 100%; margin-top: 15px; }
+        .btn-clear { background: #64748b; color: white; width: 100%; margin-top: 5px; }
+        .btn-back { background: #475569; color: white; margin-top: 20px; }
+        
+        /* Çizim Alanı */
+        #paintCanvas { background: #ffffff; border-radius: 15px; border: 3px solid #334155; cursor: crosshair; touch-action: none; margin: 15px 0 5px 0; }
+        .color-palette { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; padding: 5px; background: rgba(0,0,0,0.2); border-radius: 50px; }
+        .color-box { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+        .color-box.selected { border-color: #ffffff; transform: scale(1.15); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+
+        .game-meta { display: flex; justify-content: space-between; width: 100%; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        #timer { color: #ef4444; }
+        #ai-task { color: #38ef7d; font-size: 20px; text-shadow: 0 0 10px rgba(56,239,125,0.4); }
+
+        .overlay-error { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); border-radius: 25px; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+        .crossmark { font-size: 80px; color: #ef4444; }
+
+        /* YORUM VE ETKİLEŞİM BÖLÜMÜ STİLLERİ */
+        .review-section { margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; text-align: left; }
+        .review-section h3 { color: #00d2ff; margin-bottom: 15px; font-size: 18px; text-align: center; }
+        .comment-input { width: 100%; height: 60px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; padding: 10px; box-sizing: border-box; font-size: 14px; resize: none; margin-bottom: 10px; }
+        .comment-input:focus { border-color: #3b82f6; outline: none; }
+        .btn-comment { background: #3b82f6; color: white; width: 100%; border-radius: 12px; padding: 10px; font-size: 14px; }
+        
+        /* Uyarı Kutusu */
+        #filter-warning { display: none; background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 10px; border-radius: 12px; margin-bottom: 15px; font-weight: bold; font-size: 14px; text-align: center; }
+        
+        /* Yorum Ağacı Listesi */
+        #comments-list { margin-top: 20px; max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 5px; }
+        .comment-item { background: rgba(255,255,255,0.03); border-left: 3px solid #00ff88; padding: 12px; border-radius: 6px; font-size: 14px; word-wrap: break-word; }
+        
+        /* Reaksiyon Butonları (Like/Dislike/Yanıtla) */
+        .comment-actions { display: flex; gap: 12px; margin-top: 8px; font-size: 12px; color: #94a3b8; }
+        .action-btn { cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s; user-select: none; }
+        .action-btn:hover { color: #fff; }
+        
+        /* Yanıt Kutusu Alanı */
+        .reply-box { display: none; margin-top: 10px; flex-direction: column; gap: 5px; }
+        .reply-input { width: 100%; height: 40px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; padding: 5px 10px; box-sizing: border-box; font-size: 12px; resize: none; }
+        .btn-reply-send { background: #10b981; color: white; border-radius: 8px; padding: 5px 10px; font-size: 11px; align-self: flex-end; }
+        
+        /* Alt Yanıtların Listesi */
+        .replies-list { margin-top: 8px; margin-left: 15px; padding-left: 10px; border-left: 2px dashed rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 6px; }
+        .reply-item { background: rgba(0,0,0,0.15); padding: 8px; border-radius: 6px; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-glow"></div>
+
+    <div id="survey-page" class="page active">
+        <div class="container">
+            <h1>Qwertz'in Websitesine Hoşgeldiniz!</h1>
+            <p style="font-size: 18px; color: #cbd5e1;">Web sitem güzel olmuş mu?</p>
+            
+            <div style="display: flex; gap: 15px; width: 80%; margin: 0 auto 20px auto;">
+                <button id="btn-evet" class="btn-evet" onclick="oyVer('evet')">EVET 👍</button>
+                <button id="btn-hayir" class="btn-hayir" onclick="oyVer('hayir')">HAYIR 👎</button>
+            </div>
+            <button class="btn-game" onclick="gecSayfa('game-page')">🎮 YAPAY ZEKA ÇİZİM OYUNU</button>
+
+            <div class="review-section">
+                <h3>✍️ Ziyaretçi Yorumları</h3>
+                
+                <div id="filter-warning">⚠️ Mesajınız küfür barındırmadığından emin olunuz!</div>
+                
+                <textarea id="comment-text" class="comment-input" placeholder="Sitem hakkında bir yorum bırakın..."></textarea>
+                <button class="btn-comment" onclick="yorumGonder()">Yorumu Gönder</button>
+                
+                <div id="comments-list">
+                    <div class="comment-item" id="c-1">
+                        <div><strong>Misafir_1:</strong> Harika bir site olmuş, ellerine sağlık kral!</div>
+                        <div class="comment-actions">
+                            <div class="action-btn" onclick="reaksiyonYap('c-1', 'like')">👍 <span class="count">3</span></div>
+                            <div class="action-btn" onclick="reaksiyonYap('c-1', 'dislike')">👎 <span class="count">0</span></div>
+                            <div class="action-btn" onclick="yanitKutusuAc('c-1')">💬 Yanıtla</div>
+                        </div>
+                        <div class="reply-box" id="reply-box-c-1">
+                            <textarea class="reply-input" placeholder="Yanıtınızı yazın..."></textarea>
+                            <button class="btn-reply-send" onclick="yanitGonder('c-1')">Yanıtla</button>
+                        </div>
+                        <div class="replies-list" id="replies-c-1">
+                            <div class="reply-item"><strong>Misafir_2:</strong> Bence de oyun kısmı çok sarıyor!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="game-page" class="page">
+        <div class="container">
+            <h1>AI Çabuk Çiz!</h1>
+            
+            <div class="game-meta">
+                <div>Süre: <span id="timer">60</span>s</div>
+                <div>Görev: <span id="ai-task">-</span></div>
+            </div>
+
+            <canvas id="paintCanvas" width="300" height="300"></canvas>
+
+            <div class="color-palette">
+                <div class="color-box selected" style="background: #0f172a;" onclick="setRenk('#0f172a', this)"></div>
+                <div class="color-box" style="background: #ef4444;" onclick="setRenk('#ef4444', this)"></div>
+                <div class="color-box" style="background: #f59e0b;" onclick="setRenk('#f59e0b', this)"></div>
+                <div class="color-box" style="background: #10b981;" onclick="setRenk('#10b981', this)"></div>
+                <div class="color-box" style="background: #3b82f6;" onclick="setRenk('#3b82f6', this)"></div>
+                <div class="color-box" style="background: #a855f7;" onclick="setRenk('#a855f7', this)"></div>
+            </div>
+
+            <button class="btn-control" onclick="aiTarama()">🔍 YAPAY ZEKA KONTROL ETSİN</button>
+            <button class="btn-clear" onclick="clearCanvas()">🗑️ Temizle</button>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Geri Dön</button>
+
+            <div id="error-screen" class="overlay-error">
+                <div class="crossmark">❌</div>
+                <h2 style="color: #ef4444;">Yapay Zeka Benzetemedi!</h2>
+                <p style="color: #cbd5e1; padding: 0 20px;">AI: "Bu hiç söylediğim şeye benzemiyor, tekrar dene!"</p>
+                <button onclick="yenidenDene()" style="background: #f59e0b; color: white; margin-top: 15px;">🔄 Rastgele Yeni Görev Al</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function gecSayfa(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'game-page') oyunBaslat();
+            else oynaBitir();
+        }
+
+        function oyVer(tip) {
+            confetti({particleCount: 80, spread: 60});
+            document.getElementById('btn-evet').disabled = true;
+            document.getElementById('btn-hayir').disabled = true;
+            alert("Oyunuz başarıyla kaydedildi! Teşekkürler.");
+        }
+
+        // --- GLOBAL KÜFÜR KONTROL FONKSİYONU ---
+        const yasakliKelimeler = ["aq", "amk", "awk", "ak", "yarram", "yarrak"];
+        function kufurVarMi(metin) {
+            let temizMetin = metin.toLowerCase();
+            for(let i = 0; i < yasakliKelimeler.length; i++) {
+                if(temizMetin.includes(yasakliKelimeler[i])) return true;
+            }
+            return false;
+        }
+
+        // --- ANA YORUM GÖNDERME ---
+        let yorumSayac = 2;
+        function yorumGonder() {
+            const inputAlani = document.getElementById('comment-text');
+            const uyariKutusu = document.getElementById('filter-warning');
+            const yorumListesi = document.getElementById('comments-list');
+            let mesaj = inputAlani.value.trim();
+            
+            if(mesaj === "") return;
+
+            if(kufurVarMi(mesaj)) {
+                uyariKutusu.style.display = "block";
+                inputAlani.style.borderColor = "#ef4444";
+                return;
+            }
+
+            uyariKutusu.style.display = "none";
+            inputAlani.style.borderColor = "rgba(255,255,255,0.1)";
+            
+            let yeniId = "c-" + yorumSayac++;
+            
+            const yeniYorumHtml = `
+                <div class="comment-item" id="${yeniId}">
+                    <div><strong>Misafir_${yorumSayac}:</strong> ${mesaj}</div>
+                    <div class="comment-actions">
+                        <div class="action-btn" onclick="reaksiyonYap('${yeniId}', 'like')">👍 <span class="count">0</span></div>
+                        <div class="action-btn" onclick="reaksiyonYap('${yeniId}', 'dislike')">👎 <span class="count">0</span></div>
+                        <div class="action-btn" onclick="yanitKutusuAc('${yeniId}')">💬 Yanıtla</div>
+                    </div>
+                    <div class="reply-box" id="reply-box-**${yeniId}**" style="display:none; margin-top:10px; flex-direction:column; gap:5px;">
+                        <textarea class="reply-input" placeholder="Yanıtınızı yazın..."></textarea>
+                        <button class="btn-reply-send" onclick="yanitGonder('${yeniId}')">Yanıtla</button>
+                    </div>
+                    <div class="replies-list" id="replies-${yeniId}"></div>
+                </div>
+            `;
+            
+            // Yeni yorumu ekle
+            yorumListesi.insertAdjacentHTML('beforeend', yeniYorumHtml);
+            confetti({particleCount: 30, spread: 40});
+            inputAlani.value = "";
+            yorumListesi.scrollTop = yorumListesi.scrollHeight;
+        }
+
+        // --- LIKE / DISLIKE SİSTEMİ ---
+        function reaksiyonYap(id, tip) {
+            const yorumElementi = document.getElementById(id);
+            let index = (tip === 'like') ? 0 : 1;
+            const countSpan = yorumElementi.querySelectorAll('.comment-actions .count')[index];
+            let mevcutSayi = parseInt(countSpan.innerText);
+            countSpan.innerText = mevcutSayi + 1;
+        }
+
+        // --- YANIT KUTUSUNU AÇMA / KAPATMA ---
+        function yanitKutusuAc(id) {
+            const box = document.getElementById("c-" + id ? document.getElementById(`reply-box-${id}`) : null) || document.getElementById(`reply-box-**${id}**`);
+            if(box) {
+                box.style.display = (box.style.display === "flex") ? "none" : "flex";
+            }
+        }
+
+        // --- ALT YANIT GÖNDERME ---
+        function yanitGonder(id) {
+            const box = document.getElementById(`reply-box-${id}`) || document.getElementById(`reply-box-**${id}**`);
+            const input = box.querySelector('.reply-input');
+            const uyariKutusu = document.getElementById('filter-warning');
+            const repliesList = document.getElementById(`replies-${id}`);
+            
+            let yanitMesaj = input.value.trim();
+            if(yanitMesaj === "") return;
+
+            if(kufurVarMi(yanitMesaj)) {
+                uyariKutusu.style.display = "block";
+                input.style.borderColor = "#ef4444";
+                return;
+            }
+
+            uyariKutusu.style.display = "none";
+            input.style.borderColor = "rgba(255,255,255,0.2)";
+
+            const yeniYanit = document.createElement('div');
+            yeniYanit.className = 'reply-item';
+            yeniYanit.innerHTML = `<strong>Yanıt:</strong> ${yanitMesaj}`;
+            
+            repliesList.appendChild(yeniYanit);
+            input.value = "";
+            box.style.display = "none";
+            confetti({particleCount: 15, spread: 30});
+        }
+
+        // --- AI ÇİZİM OYUN MOTORU ---
+        const canvas = document.getElementById('paintCanvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+        let sure = 60;
+        let zamanlayici;
+        
+        const gorevler = ["Mandalina", "Çubuk Adam", "Ev", "Gözlük", "Güneş", "Araba", "Kedi", "Ağaç"];
+        let aktifGorev = "";
+
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#0f172a';
+
+        function setRenk(yeniRenk, eleman) {
+            ctx.strokeStyle = yeniRenk;
+            document.querySelectorAll('.color-box').forEach(box => box.classList.remove('selected'));
+            eleman.classList.add('selected');
+        }
+
+        canvas.addEventListener('mousedown', () => drawing = true);
+        canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
+        canvas.addEventListener('mousemove', draw);
+
+        canvas.addEventListener('touchstart', (e) => { drawing = true; draw(e.touches[0]); });
+        canvas.addEventListener('touchend', () => { drawing = false; ctx.beginPath(); });
+        canvas.addEventListener('touchmove', (e) => { draw(e.touches[0]); e.preventDefault(); });
+
+        function draw(e) {
+            if (!drawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX || e.pageX) - rect.left;
+            const y = (e.clientY || e.pageY) - rect.top;
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function aiKonus(metin) {
+            if ('speechSynthesis' in window) {
+                const speech = new SpeechSynthesisUtterance(metin);
+                speech.lang = 'tr-TR';
+                window.speechSynthesis.speak(speech);
+            }
+        }
+
+        function oyunBaslat() {
+            clearCanvas();
+            document.getElementById('error-screen').style.display = 'none';
+            ctx.strokeStyle = '#0f172a';
+            document.querySelectorAll('.color-box').forEach(box => box.classList.remove('selected'));
+            document.querySelector('.color-palette .color-box').classList.add('selected');
+
+            aktifGorev = gorevler[Math.floor(Math.random() * gorevler.length)];
+            document.getElementById('ai-task').innerText = aktifGorev;
+            
+            setTimeout(() => {
+                aiKonus("Lütfen ekrana bir " + aktifGorev + " çiziniz.");
+            }, 300);
+
+            sure = 60;
+            document.getElementById('timer').innerText = sure;
+            clearInterval(zamanlayici);
+            zamanlayici = setInterval(() => {
+                sure--;
+                document.getElementById('timer').innerText = sure;
+                if(sure <= 0) {
+                    clearInterval(zamanlayici);
+                    aiTarama();
+                }
+            }, 1000);
+        }
+
+        function oynaBitir() {
+            clearInterval(zamanlayici);
+        }
+
+        function aiTarama() {
+            clearInterval(zamanlayici);
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let cizilenPikselSayisi = 0;
+            
+            for (let i = 0; i < imgData.data.length; i += 4) {
+                if (imgData.data[i+3] > 0) cizilenPikselSayisi++;
+            }
+
+            if (cizilenPikselSayisi < 50) {
+                aiKonus("Boş ekranı tarayamam, lütfen bir şeyler çizin.");
+                oyunBaslat();
+                return;
+            }
+
+            let aiBenzettiMi = Math.random() > 0.45; 
+
+            if (aiBenzettiMi) {
+                aiKonus("Harika! Bu çizim kesinlikle bir " + aktifGorev + ".");
+                confetti({particleCount: 150, spread: 80});
+                alert("Tebrikler! Yapay zeka çizdiğiniz resmi bild: " + aktifGorev);
+                oyunBaslat();
+            } else {
+                aiKonus("Maalesef benzetemedim. Tekrar deneyin.");
+                document.getElementById('error-screen').style.display = 'flex';
+            }
+        }
+
+        function yenidenDene() {
+            oyunBaslat();
+        }
+    </script>
+</body>
+</html>
+
