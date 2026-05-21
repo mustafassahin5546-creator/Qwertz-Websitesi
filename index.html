@@ -76,6 +76,10 @@
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: 32px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
         .card-down { background: #334155; border: 2px solid #475569; color: #cbd5e1; font-size: 24px; }
         .card-up { background: #1e293b; border: 2px solid #3b82f6; transform: rotateY(180deg); }
+
+        /* GEOMETRY DASH STİLLERİ */
+        #gdCanvas { background: linear-gradient(to bottom, #1d4ed8, #1e1b4b); border-radius: 15px; border: 3px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); display: block; margin: 15px 0; touch-action: none; }
+        .gd-tip { font-size: 13px; color: #94a3b8; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -109,6 +113,8 @@
             <button class="btn-game" onclick="gecSayfa('game-page')">🎮 YAPAY ZEKA ÇİZİM OYUNU</button>
             <button class="btn-game" style="background:#10b981;" onclick="gecSayfa('rabbit-page')">🐇 KARNAVAL TAVŞAN AVCISI</button>
             <button class="btn-game" style="background:#8b5cf6;" onclick="gecSayfa('memory-page')">🎴 HAFIZA KARTLARI OYUNU</button>
+            <!-- GEOMETRY DASH BUTONU -->
+            <button class="btn-game" style="background:#06b6d4;" onclick="gecSayfa('gd-page')">🔺 GEOMETRY DASH MINI</button>
 
             <div class="review-section">
                 <div class="beta-warning-box">
@@ -182,6 +188,23 @@
         </div>
     </div>
 
+    <!-- GEOMETRY DASH OYUN SAYFASI -->
+    <div id="gd-page" class="page">
+        <div class="container">
+            <h1>🔺 Geometry Dash Mini</h1>
+            <div class="game-meta">
+                <div>İlerleme: <span id="gd-progress" style="color: #00ff88;">0%</span></div>
+                <div>En Yüksek: <span id="gd-highscore" style="color: #f59e0b;">0%</span></div>
+            </div>
+            
+            <canvas id="gdCanvas" width="400" height="200"></canvas>
+            
+            <div class="gd-tip">Zıplamak için Ekrana Dokun, Tıkla veya Boşluk (Space) Tuşuna Bas!</div>
+            <button class="btn-clear" style="background: #06b6d4;" onclick="gdOyunuBaslat()">🔄 Baştan Başla</button>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
+        </div>
+    </div>
+
     <script>
         // --- GELİŞTİRİCİ GİRİŞİ (RICK ROLL) ---
         function devGiris() {
@@ -221,6 +244,8 @@
                 document.getElementById('btn-evet').disabled = true;
                 document.getElementById('btn-hayir').disabled = true;
             }
+            // Highscore yükleme
+            document.getElementById('gd-highscore').innerText = (localStorage.getItem('gd_highscore') || 0) + "%";
         };
 
         function oyVer(tip) {
@@ -239,10 +264,16 @@
         function gecSayfa(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            
+            // Diğer motorları temizle/kapat
+            oynaBitir(); 
+            tavsanOyunuBitir();
+            gdOyunuBitir();
+
             if(id === 'game-page') oyunBaslat();
             else if(id === 'rabbit-page') tavsanOyunuBaslat();
             else if(id === 'memory-page') hafizaOyunuBaslat();
-            else { oynaBitir(); tavsanOyunuBitir(); }
+            else if(id === 'gd-page') gdOyunuBaslat();
         }
 
         // --- MİNİGAME 3: HAFIZA KARTLARI OYUNU ---
@@ -469,6 +500,181 @@
             }
         }
         function yenidenDene() { oyunBaslat(); }
+
+
+        // --- MİNİGAME 4: GEOMETRY DASH MOTORU ---
+        const gdCanvas = document.getElementById('gdCanvas');
+        const gdCtx = gdCanvas.getContext('2d');
+        let gdAnimId;
+        
+        // Oyun Değişkenleri
+        let gdPlayer, gdObstacles, gdGameSpeed, gdDistance, gdActive, gdTotalLength;
+        
+        function gdOyunuBaslat() {
+            gdActive = true;
+            gdGameSpeed = 3.2;
+            gdDistance = 0;
+            gdTotalLength = 2500; // İlk bölümün uzunluğu (piksel bazlı ilerleme)
+            gdObstacles = [];
+            
+            gdPlayer = {
+                x: 50, y: 140, size: 25,
+                vy: 0, gravity: 0.6, jumpForce: -8.5,
+                isGrounded: true, angle: 0
+            };
+
+            // 1. Bölüm Stereo Madness Haritası (Diken Dağılımları)
+            // Tip 1: Tekli Diken, Tip 2: İkili Diken, Tip 3: Büyük Blok Engel
+            const haritaPlanı = [400, 650, 900, 1150, 1350, 1600, 1800, 2050, 2200];
+            haritaPlanı.forEach((posX, i) => {
+                let tip = (i % 3 === 0) ? 1 : ((i % 3 === 1) ? 2 : 3);
+                gdObstacles.push({ x: posX, type: tip, width: 20, height: 25, passed: false });
+            });
+
+            // Dinleyicileri temizle ve kur
+            window.removeEventListener('keydown', gdZiplamaKlavye);
+            gdCanvas.removeEventListener('touchstart', gdZiplamaDokunma);
+            
+            window.addEventListener('keydown', gdZiplamaKlavye);
+            gdCanvas.addEventListener('touchstart', gdZiplamaDokunma);
+
+            if(gdAnimId) cancelAnimationFrame(gdAnimId);
+            gdDongu();
+        }
+
+        function gdZiplamaKlavye(e) { if(e.code === 'Space' || e.code === 'ArrowUp') gdZıpla(); }
+        function gdZiplamaDokunma(e) { gdZıpla(); e.preventDefault(); }
+
+        function gdZıpla() {
+            if(gdPlayer.isGrounded && gdActive) {
+                gdPlayer.vy = gdPlayer.jumpForce;
+                gdPlayer.isGrounded = false;
+            }
+        }
+
+        function gdDongu() {
+            if (!gdActive) return;
+            
+            // Ekranı temizle ve arka planı çiz
+            gdCtx.clearRect(0, 0, gdCanvas.width, gdCanvas.height);
+            
+            // Yer çizgisi çizimi
+            gdCtx.strokeStyle = '#3b82f6';
+            gdCtx.lineWidth = 3;
+            gdCtx.beginPath();
+            gdCtx.moveTo(0, 165);
+            gdCtx.lineTo(gdCanvas.width, 165);
+            gdCtx.stroke();
+
+            // İlerleme ve Hızlanma
+            gdDistance += gdGameSpeed;
+            let yuzde = Math.min(Math.floor((gdDistance / gdTotalLength) * 100), 100);
+            document.getElementById('gd-progress').innerText = yuzde + "%";
+
+            // Oyuncu Fizik ve Animasyonu
+            gdPlayer.vy += gdPlayer.gravity;
+            gdPlayer.y += gdPlayer.vy;
+
+            if (gdPlayer.y >= 140) {
+                gdPlayer.y = 140;
+                gdPlayer.vy = 0;
+                gdPlayer.isGrounded = true;
+                // Yerdeyken açıyı en yakın 90 dereceye yuvarla
+                gdPlayer.angle = Math.round(gdPlayer.angle / 90) * 90;
+            } else {
+                // Havadayken dönme efekti
+                gdPlayer.angle += 3.5;
+            }
+
+            // Oyuncuyu Çiz (Gözlü Küp)
+            gdCtx.save();
+            gdCtx.translate(gdPlayer.x + gdPlayer.size/2, gdPlayer.y + gdPlayer.size/2);
+            gdCtx.rotate((gdPlayer.angle * Math.PI) / 180);
+            
+            // Küp Gövdesi
+            gdCtx.fillStyle = '#00ff88';
+            gdCtx.fillRect(-gdPlayer.size/2, -gdPlayer.size/2, gdPlayer.size, gdPlayer.size);
+            gdCtx.strokeStyle = '#ffffff';
+            gdCtx.lineWidth = 2;
+            gdCtx.strokeRect(-gdPlayer.size/2, -gdPlayer.size/2, gdPlayer.size, gdPlayer.size);
+            
+            // Yüz/Göz Tasarımı
+            gdCtx.fillStyle = '#0f172a';
+            gdCtx.fillRect(2, -8, 6, 6);
+            gdCtx.fillRect(2, 2, 6, 6);
+            gdCtx.restore();
+
+            // Engelleri Yönet ve Çiz
+            for (let i = 0; i < gdObstacles.length; i++) {
+                let obs = gdObstacles[i];
+                obs.x -= gdGameSpeed;
+
+                // Engelleri Tiplerine Göre Çiz
+                gdCtx.fillStyle = '#ef4444';
+                gdCtx.beginPath();
+                if (obs.type === 1) { // Tekli Üçgen Diken
+                    gdCtx.moveTo(obs.x, 165);
+                    gdCtx.lineTo(obs.x + 10, 165 - obs.height);
+                    gdCtx.lineTo(obs.x + 20, 165);
+                } else if (obs.type === 2) { // İkili Diken Yan Yana
+                    gdCtx.moveTo(obs.x, 165);
+                    gdCtx.lineTo(obs.x + 8, 165 - obs.height);
+                    gdCtx.lineTo(obs.x + 16, 165);
+                    gdCtx.moveTo(obs.x + 14, 165);
+                    gdCtx.lineTo(obs.x + 22, 165 - obs.height);
+                    gdCtx.lineTo(obs.x + 30, 165);
+                } else { // Kare Kare Blok Engel
+                    gdCtx.fillRect(obs.x, 165 - obs.height, obs.width, obs.height);
+                    gdCtx.strokeStyle = '#fff';
+                    gdCtx.strokeRect(obs.x, 165 - obs.height, obs.width, obs.height);
+                }
+                gdCtx.fill();
+
+                // Çarpışma Testi Algoritması
+                let oyuncuSag = gdPlayer.x + gdPlayer.size;
+                let oyuncuSol = gdPlayer.x;
+                let oyuncuAlt = gdPlayer.y + gdPlayer.size;
+                let oyuncuUst = gdPlayer.y;
+
+                let engelSol = obs.x;
+                let engelSag = obs.x + (obs.type === 2 ? 30 : obs.width);
+                let engelUst = 165 - obs.height;
+
+                if (oyuncuSag > engelSol + 4 && oyuncuSol < engelSag - 4 && oyuncuAlt > engelUst + 2) {
+                    gdActive = false;
+                    
+                    // Highscore güncelleme
+                    let mevcutHigh = parseInt(localStorage.getItem('gd_highscore') || 0);
+                    if(yuzde > mevcutHigh) {
+                        localStorage.setItem('gd_highscore', yuzde);
+                        document.getElementById('gd-highscore').innerText = yuzde + "%";
+                    }
+                    
+                    alert("💥 Patladın! İlerleme derecen: " + yuzde + "%");
+                    gdOyunuBaslat();
+                    return;
+                }
+            }
+
+            // Bölüm Kazanma Kontrolü
+            if (yuzde >= 100) {
+                gdActive = false;
+                confetti({particleCount: 150, spread: 80});
+                localStorage.setItem('gd_highscore', 100);
+                document.getElementById('gd-highscore').innerText = "100%";
+                alert("🏆 TEBRİKLER! Stereo Madness 1. Bölümü Tamamladın!");
+                gecSayfa('survey-page');
+                return;
+            }
+
+            gdAnimId = requestAnimationFrame(gdDongu);
+        }
+
+        function gdOyunuBitir() {
+            gdActive = false;
+            if(gdAnimId) cancelAnimationFrame(gdAnimId);
+            window.removeEventListener('keydown', gdZiplamaKlavye);
+        }
     </script>
 </body>
 </html>
