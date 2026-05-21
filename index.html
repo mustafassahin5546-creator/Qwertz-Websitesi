@@ -154,7 +154,7 @@
 
     <div id="game-page" class="page">
         <div class="container">
-            <h1>AI Çabuk Çiz!</h1>
+            <h1>AI Çabuk Çiz! ✏️</h1>
             <div class="game-meta">
                 <div>Süre: <span id="timer">60</span>s</div>
                 <div>Görev: <span id="ai-task">-</span></div>
@@ -279,7 +279,7 @@
         };
 
         function oyVer(tip) {
-            confetti({particleCount: 80, spread: 60});
+            confetti({particleCount: 80, spread:Spread: 60});
             let mevcutOy = parseInt(localStorage.getItem('site_' + tip) || 0);
             localStorage.setItem('site_' + tip, mevcutOy + 1);
             localStorage.setItem('oy_kullandi', 'true');
@@ -301,7 +301,10 @@
             gdOyunuBitir();
             minesOyunuBitir();
 
-            if(id === 'game-page') oyunBaslat();
+            if(id === 'game-page') {
+                cizimSkor = 0; // Her girişte kolay aşamadan başla
+                oyunBaslat();
+            }
             else if(id === 'rabbit-page') tavsanOyunuBaslat();
             else if(id === 'memory-page') hafizaOyunuBaslat();
             else if(id === 'gd-page') gdOyunuBaslat();
@@ -441,7 +444,12 @@
             const delik = rastgeleDelik();
             delik.classList.add('aktif');
             
+            // Hız kontrolü: 300 puanı aşınca tavşanlar deliklerde yarı yarıya daha az bekler (Hızlanır)
             let kalmaSuresi = Math.random() * 600 + 600; 
+            if (tavsanSkor > 300) {
+                kalmaSuresi = Math.random() * 300 + 300; 
+            }
+            
             moleZamanlayici = setTimeout(() => {
                 delik.classList.remove('aktif');
                 tavsanFirla();
@@ -454,6 +462,10 @@
             
             tavsanSkor += 10;
             document.getElementById('rabbit-score').innerText = tavsanSkor;
+            
+            // Her başarılı vuruşta süreyi 10 saniye arttır
+            tavsanSuresi += 10;
+            document.getElementById('rabbit-timer').innerText = tavsanSuresi;
             
             delik.classList.remove('aktif');
             
@@ -470,13 +482,19 @@
             document.querySelectorAll('.delik').forEach(d => d.classList.remove('aktif'));
         }
 
-        // --- MİNİGAME 1: AI ÇİZİM MOTORU (ESKİ KARARLI SÜRÜM) ---
+        // --- MİNİGAME 1: AI ÇİZİM MOTORU (GELİŞTİRİLMİŞ ZORLUK SEVİYELİ) ---
         const canvas = document.getElementById('paintCanvas');
         const ctx = canvas.getContext('2d');
         let drawing = false;
         let sure = 60;
         let zamanlayici;
-        const gorevler = ["Mandalina", "Çubuk Adam", "Ev", "Gözlük", "Güneş", "Araba"];
+        
+        // Kademeli zorluk havuzları
+        const gorevlerKolay = ["Mandalina", "Çubuk Adam", "Güneş", "Kare", "Daire"];
+        const gorevlerOrta = ["Ev", "Gözlük", "Ağaç", "Yıldız", "Bulut"];
+        const gorevlerZor = ["Dağ", "Bisiklet", "Araba", "Kedi", "Gemi", "Telefon"];
+        
+        let cizimSkor = 0; // Doğru tahmin sayısına göre zorluk katlanacak
         let aktifGorev = "";
 
         ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a';
@@ -508,8 +526,16 @@
         function oyunBaslat() {
             clearCanvas();
             document.getElementById('error-screen').style.display = 'none';
-            aktifGorev = gorevler[Math.floor(Math.random() * gorevler.length)];
-            document.getElementById('ai-task').innerText = aktifGorev;
+            
+            // Kolaydan zora seçme algoritması
+            let secimHavuzu = gorevlerKolay;
+            if(cizimSkor >= 4) {
+                secimHavuzu = gorevlerZor;
+            } else if(cizimSkor >= 2) {
+                secimHavuzu = gorevlerOrta;
+            }
+
+            aktifGorev = secimHavuzu[Math.floor(Math.random() * secimHavuzu.length)];
             setTimeout(() => { aiKonus("Lütfen ekrana bir " + aktifGorev + " çiziniz."); }, 300);
             sure = 60; document.getElementById('timer').innerText = sure;
             clearInterval(zamanlayici);
@@ -524,7 +550,8 @@
             if (Math.random() > 0.45) {
                 aiKonus("Harika! Bu bir " + aktifGorev);
                 confetti({particleCount: 100, spread: 60});
-                alert("Yapay zeka bild: " + aktifGorev);
+                alert("Yapay zeka bildi: " + aktifGorev);
+                cizimSkor++; // Zorluğu bir kademe tırmandır
                 oyunBaslat();
             } else {
                 aiKonus("Maalesef benzetemedim.");
@@ -556,7 +583,6 @@
             };
 
             // 1. Bölüm Stereo Madness Haritası (Diken Dağılımları)
-            // Tip 1: Tekli Diken, Tip 2: İkili Diken, Tip 3: Büyük Blok Engel
             const haritaPlanı = [400, 650, 900, 1150, 1350, 1600, 1800, 2050, 2200];
             haritaPlanı.forEach((posX, i) => {
                 let tip = (i % 3 === 0) ? 1 : ((i % 3 === 1) ? 2 : 3);
@@ -611,10 +637,8 @@
                 gdPlayer.y = 140;
                 gdPlayer.vy = 0;
                 gdPlayer.isGrounded = true;
-                // Yerdeyken açıyı en yakın 90 dereceye yuvarla
                 gdPlayer.angle = Math.round(gdPlayer.angle / 90) * 90;
             } else {
-                // Havadayken dönme efekti
                 gdPlayer.angle += 3.5;
             }
 
@@ -623,14 +647,12 @@
             gdCtx.translate(gdPlayer.x + gdPlayer.size/2, gdPlayer.y + gdPlayer.size/2);
             gdCtx.rotate((gdPlayer.angle * Math.PI) / 180);
             
-            // Küp Gövdesi
             gdCtx.fillStyle = '#00ff88';
             gdCtx.fillRect(-gdPlayer.size/2, -gdPlayer.size/2, gdPlayer.size, gdPlayer.size);
             gdCtx.strokeStyle = '#ffffff';
             gdCtx.lineWidth = 2;
             gdCtx.strokeRect(-gdPlayer.size/2, -gdPlayer.size/2, gdPlayer.size, gdPlayer.size);
             
-            // Yüz/Göz Tasarımı
             gdCtx.fillStyle = '#0f172a';
             gdCtx.fillRect(2, -8, 6, 6);
             gdCtx.fillRect(2, 2, 6, 6);
@@ -641,28 +663,27 @@
                 let obs = gdObstacles[i];
                 obs.x -= gdGameSpeed;
 
-                // Engelleri Tiplerine Göre Çiz
                 gdCtx.fillStyle = '#ef4444';
                 gdCtx.beginPath();
-                if (obs.type === 1) { // Tekli Üçgen Diken
+                if (obs.type === 1) { 
                     gdCtx.moveTo(obs.x, 165);
                     gdCtx.lineTo(obs.x + 10, 165 - obs.height);
                     gdCtx.lineTo(obs.x + 20, 165);
-                } else if (obs.type === 2) { // İkili Diken Yan Yana
+                } else if (obs.type === 2) { 
                     gdCtx.moveTo(obs.x, 165);
                     gdCtx.lineTo(obs.x + 8, 165 - obs.height);
                     gdCtx.lineTo(obs.x + 16, 165);
                     gdCtx.moveTo(obs.x + 14, 165);
                     gdCtx.lineTo(obs.x + 22, 165 - obs.height);
                     gdCtx.lineTo(obs.x + 30, 165);
-                } else { // Kare Kare Blok Engel
+                } else { 
                     gdCtx.fillRect(obs.x, 165 - obs.height, obs.width, obs.height);
                     gdCtx.strokeStyle = '#fff';
                     gdCtx.strokeRect(obs.x, 165 - obs.height, obs.width, obs.height);
                 }
                 gdCtx.fill();
 
-                // Çarpışma Testi Algoritması
+                // Çarpışma Testi
                 let oyuncuSag = gdPlayer.x + gdPlayer.size;
                 let oyuncuSol = gdPlayer.x;
                 let oyuncuAlt = gdPlayer.y + gdPlayer.size;
@@ -675,7 +696,6 @@
                 if (oyuncuSag > engelSol + 4 && oyuncuSol < engelSag - 4 && oyuncuAlt > engelUst + 2) {
                     gdActive = false;
                     
-                    // Highscore güncelleme
                     let mevcutHigh = parseInt(localStorage.getItem('gd_highscore') || 0);
                     if(yuzde > mevcutHigh) {
                         localStorage.setItem('gd_highscore', yuzde);
@@ -688,7 +708,6 @@
                 }
             }
 
-            // Bölüm Kazanma Kontrolü
             if (yuzde >= 100) {
                 gdActive = false;
                 confetti({particleCount: 150, spread: 80});
@@ -728,7 +747,6 @@
             grid.innerHTML = '';
             minesBoard = [];
 
-            // Boş tahta matrisi kurulumu
             for (let r = 0; r < minesRows; r++) {
                 minesBoard[r] = [];
                 for (let c = 0; c < minesCols; c++) {
@@ -738,7 +756,6 @@
                 }
             }
 
-            // Rastgele konumlara mayın ekleme
             let minesPlaced = 0;
             while (minesPlaced < totalMines) {
                 let r = Math.floor(Math.random() * minesRows);
@@ -749,7 +766,6 @@
                 }
             }
 
-            // Çevre hücrelerdeki mayın sayılarını hesaplama
             for (let r = 0; r < minesRows; r++) {
                 for (let c = 0; c < minesCols; c++) {
                     if (minesBoard[r][c].isMine) continue;
@@ -765,17 +781,13 @@
                 }
             }
 
-            // Grid hücre elementlerini dinamik oluşturma
             for (let r = 0; r < minesRows; r++) {
                 for (let c = 0; c < minesCols; c++) {
                     const cellEl = document.createElement('div');
                     cellEl.classList.add('mine-cell');
                     cellEl.id = `cell-${r}-${c}`;
                     
-                    // Hücre açma tıkı
                     cellEl.addEventListener('click', () => cellClick(r, c));
-                    
-                    // Bayrak koyma (Sağ tık)
                     cellEl.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
                         cellFlag(r, c);
@@ -807,7 +819,6 @@
                 const renkler = ["", "#3b82f6", "#10b981", "#ef4444", "#8b5cf6", "#f59e0b", "#06b6d4", "#ec4899", "#ffffff"];
                 cellEl.style.color = renkler[cell.count];
             } else {
-                // Zincirleme genişleme reaksiyonu (Komşuları otomatik tetikler)
                 for (let dr = -1; dr <= 1; dr++) {
                     for (let dc = -1; dc <= 1; dc++) {
                         if (minesBoard[r + dr] && minesBoard[r + dr][c + dc]) {
