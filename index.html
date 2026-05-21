@@ -68,11 +68,39 @@
         /* Alt Yanıtların Listesi */
         .replies-list { margin-top: 8px; margin-left: 15px; padding-left: 10px; border-left: 2px dashed rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 6px; }
         .reply-item { background: rgba(0,0,0,0.15); padding: 8px; border-radius: 6px; font-size: 13px; }
+
+        /* YENİ EKLENEN MÜZİK BUTONU STİLİ */
+        .floating-music-btn {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: #e11d48;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(225, 29, 72, 0.4);
+            z-index: 9999;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .floating-music-btn:hover {
+            transform: scale(1.05);
+            background: #be123c;
+        }
     </style>
 </head>
 <body>
 
     <div class="bg-glow"></div>
+
+    <!-- MÜZİK ÇALAR GİZLİ ALANI VE BUTONU -->
+    <div id="yt-player-container" style="display:none;"></div>
+    <button id="music-btn" class="floating-music-btn" onclick="toggleMusic()">🎵 Müzik Aç</button>
 
     <div id="survey-page" class="page active">
         <div class="container">
@@ -149,6 +177,59 @@
     </div>
 
     <script>
+        // --- YENİ EKLENEN: YOUTUBE MÜZİK SİSTEMİ ---
+        let ytPlayer;
+        let isMusicPlaying = false;
+        
+        function onYouTubeIframeAPIReady() {
+            ytPlayer = new YT.Player('yt-player-container', {
+                height: '0',
+                width: '0',
+                videoId: 'C2eaXq8zB2c', // Aleyna Tilki - Sen Olsan Bari
+                playerVars: {
+                    'autoplay': 0,
+                    'controls': 0,
+                    'showinfo': 0,
+                    'rel': 0
+                }
+            });
+        }
+
+        function toggleMusic() {
+            if (!ytPlayer || !ytPlayer.playVideo) {
+                alert("Müzik çalar yükleniyor, lütfen 1-2 saniye bekleyip tekrar bas.");
+                return;
+            }
+            
+            let btn = document.getElementById('music-btn');
+            if (isMusicPlaying) {
+                ytPlayer.pauseVideo();
+                btn.innerHTML = '🎵 Müzik Aç';
+                btn.style.background = '#e11d48';
+            } else {
+                ytPlayer.playVideo();
+                btn.innerHTML = '⏸️ Müziği Durdur';
+                btn.style.background = '#10b981'; // Çalarken yeşil olsun
+            }
+            isMusicPlaying = !isMusicPlaying;
+        }
+
+        // --- YENİ EKLENEN: YORUMLARI HAFIZADA TUTMA ---
+        window.onload = function() {
+            let kayitliYorumlar = localStorage.getItem('qwertz_yorumlar');
+            if (kayitliYorumlar) {
+                document.getElementById('comments-list').innerHTML = kayitliYorumlar;
+                // Kayıtlı yorum sayısına göre sayacı güncelle ki isimler karışmasın
+                let yorumSayisi = document.querySelectorAll('.comment-item').length;
+                if(yorumSayisi > 0) yorumSayac = yorumSayisi + 1;
+            }
+        };
+
+        function yorumlariKaydet() {
+            localStorage.setItem('qwertz_yorumlar', document.getElementById('comments-list').innerHTML);
+        }
+        // ---------------------------------------------
+
         function gecSayfa(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
@@ -196,13 +277,13 @@
             
             const yeniYorumHtml = `
                 <div class="comment-item" id="${yeniId}">
-                    <div><strong>Misafir_${yorumSayac}:</strong> ${mesaj}</div>
+                    <div><strong>Misafir_${yorumSayac - 1}:</strong> ${mesaj}</div>
                     <div class="comment-actions">
                         <div class="action-btn" onclick="reaksiyonYap('${yeniId}', 'like')">👍 <span class="count">0</span></div>
                         <div class="action-btn" onclick="reaksiyonYap('${yeniId}', 'dislike')">👎 <span class="count">0</span></div>
                         <div class="action-btn" onclick="yanitKutusuAc('${yeniId}')">💬 Yanıtla</div>
                     </div>
-                    <div class="reply-box" id="reply-box-**${yeniId}**" style="display:none; margin-top:10px; flex-direction:column; gap:5px;">
+                    <div class="reply-box" id="reply-box-${yeniId}" style="display:none; margin-top:10px; flex-direction:column; gap:5px;">
                         <textarea class="reply-input" placeholder="Yanıtınızı yazın..."></textarea>
                         <button class="btn-reply-send" onclick="yanitGonder('${yeniId}')">Yanıtla</button>
                     </div>
@@ -215,6 +296,8 @@
             confetti({particleCount: 30, spread: 40});
             inputAlani.value = "";
             yorumListesi.scrollTop = yorumListesi.scrollHeight;
+            
+            yorumlariKaydet(); // EKLENDİ: Yorumu yerel hafızaya kaydet
         }
 
         // --- LIKE / DISLIKE SİSTEMİ ---
@@ -224,11 +307,13 @@
             const countSpan = yorumElementi.querySelectorAll('.comment-actions .count')[index];
             let mevcutSayi = parseInt(countSpan.innerText);
             countSpan.innerText = mevcutSayi + 1;
+            
+            yorumlariKaydet(); // EKLENDİ: Beğeniyi kaydet
         }
 
         // --- YANIT KUTUSUNU AÇMA / KAPATMA ---
         function yanitKutusuAc(id) {
-            const box = document.getElementById("c-" + id ? document.getElementById(`reply-box-${id}`) : null) || document.getElementById(`reply-box-**${id}**`);
+            const box = document.getElementById(`reply-box-${id}`) || document.getElementById(`reply-box-**${id}**`);
             if(box) {
                 box.style.display = (box.style.display === "flex") ? "none" : "flex";
             }
@@ -261,6 +346,8 @@
             input.value = "";
             box.style.display = "none";
             confetti({particleCount: 15, spread: 30});
+            
+            yorumlariKaydet(); // EKLENDİ: Alt yanıtı kaydet
         }
 
         // --- AI ÇİZİM OYUN MOTORU ---
@@ -380,4 +467,3 @@
     </script>
 </body>
 </html>
-
