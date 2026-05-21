@@ -28,7 +28,7 @@
         .btn-back { background: #475569; color: white; margin-top: 20px; }
         
         /* Çizim Alanı */
-        #paintCanvas { background: #ffffff; border-radius: 15px; border: 3px solid #334155; cursor: crosshair; touch-action: none; margin: 15px 0 5px 0; }
+        #paintCanvas { background: #ffffff; border-radius: 15px; border: 3px solid #334155; cursor: crosshair; touch-action: none; margin: 15px 0 5px 0; width: 100%; max-width: 300px; height: auto; aspect-ratio: 1/1; }
         .color-palette { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; padding: 5px; background: rgba(0,0,0,0.2); border-radius: 50px; }
         .color-box { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
         .color-box.selected { border-color: #ffffff; transform: scale(1.15); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
@@ -78,7 +78,7 @@
         .card-up { background: #1e293b; border: 2px solid #3b82f6; transform: rotateY(180deg); }
 
         /* GEOMETRY DASH STİLLERİ */
-        #gdCanvas { background: linear-gradient(to bottom, #1d4ed8, #1e1b4b); border-radius: 15px; border: 3px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); display: block; margin: 15px 0; touch-action: none; }
+        #gdCanvas { background: linear-gradient(to bottom, #1d4ed8, #1e1b4b); border-radius: 15px; border: 3px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); display: block; margin: 15px 0; touch-action: none; width: 100%; max-width: 400px; height: auto;}
         .gd-tip { font-size: 13px; color: #94a3b8; margin-top: 5px; }
 
         /* MAYIN TARLASI STİLLERİ */
@@ -124,7 +124,6 @@
             <button class="btn-game" style="background:#10b981;" onclick="gecSayfa('rabbit-page')">🐇 KARNAVAL TAVŞAN AVCISI</button>
             <button class="btn-game" style="background:#8b5cf6;" onclick="gecSayfa('memory-page')">🎴 HAFIZA KARTLARI OYUNU</button>
             <button class="btn-game" style="background:#06b6d4;" onclick="gecSayfa('gd-page')">🔺 GEOMETRY DASH MINI</button>
-            <!-- MAYIN TARLASI BUTONU -->
             <button class="btn-game" style="background:#65a30d;" onclick="gecSayfa('mines-page')">💣 MAYIN TARLASI</button>
 
             <div class="review-section">
@@ -135,7 +134,6 @@
         </div>
     </div>
 
-    <!-- HAFIZA KARTLARI OYUN SAYFASI -->
     <div id="memory-page" class="page">
         <div class="container">
             <h1>🎴 Eşleri Bul!</h1>
@@ -144,7 +142,6 @@
             </div>
             
             <div class="memory-grid" id="memory-grid-container">
-                <!-- Kartlar Javascript ile buraya eklenecek -->
             </div>
 
             <button class="btn-clear" onclick="hafizaOyunuBaslat()">🔄 Yeniden Dağıt</button>
@@ -199,7 +196,6 @@
         </div>
     </div>
 
-    <!-- GEOMETRY DASH OYUN SAYFASI -->
     <div id="gd-page" class="page">
         <div class="container">
             <h1>🔺 Geometry Dash Mini</h1>
@@ -216,7 +212,6 @@
         </div>
     </div>
 
-    <!-- MAYIN TARLASI OYUN SAYFASI -->
     <div id="mines-page" class="page">
         <div class="container">
             <h1>💣 Mayın Tarlası</h1>
@@ -226,7 +221,6 @@
             </div>
             
             <div id="mines-grid" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; margin: 20px 0; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 15px;">
-                <!-- Hücreler JS ile dolacak -->
             </div>
 
             <div class="gd-tip" style="margin-bottom: 10px;">Açmak için Tıkla, Bayrak için Sağ Tıkla (veya Basılı Tut)!</div>
@@ -503,21 +497,56 @@
             document.querySelectorAll('.color-box').forEach(box => box.classList.remove('selected'));
             eleman.classList.add('selected');
         }
-        canvas.addEventListener('mousedown', () => drawing = true);
+
+        // Çizim koordinatlarını ayarlamak için yardımcı fonksiyon
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            // X ve Y koordinatlarını canvas'ın gerçek boyutu ile ekrandaki boyutu arasındaki orana göre hesapla
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+
+            if(e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            drawing = true;
+            const pos = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        });
         canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
         canvas.addEventListener('mousemove', draw);
-        // passive: false eklendi böylece mobilde çizerken ekran kaymayacak
-        canvas.addEventListener('touchstart', (e) => { drawing = true; draw(e.touches[0]); }, { passive: false });
+        
+        canvas.addEventListener('touchstart', (e) => { 
+            drawing = true; 
+            const pos = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }, { passive: false });
         canvas.addEventListener('touchend', () => { drawing = false; ctx.beginPath(); });
-        canvas.addEventListener('touchmove', (e) => { draw(e.touches[0]); e.preventDefault(); }, { passive: false });
+        canvas.addEventListener('touchmove', (e) => { 
+            draw(e); 
+            e.preventDefault(); 
+        }, { passive: false });
 
         function draw(e) {
             if (!drawing) return;
-            const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX || e.pageX) - rect.left;
-            const y = (e.clientY || e.pageY) - rect.top;
-            ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y);
+            const pos = getPos(e);
+            ctx.lineTo(pos.x, pos.y); 
+            ctx.stroke(); 
         }
+
         function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
         function aiKonus(metin) {
             if ('speechSynthesis' in window) {
@@ -537,7 +566,12 @@
             }
 
             aktifGorev = secimHavuzu[Math.floor(Math.random() * secimHavuzu.length)];
+            
+            // HATA BURADAYDI, EKRANA YAZDIRMA KODU EKLENDİ
+            document.getElementById('ai-task').innerText = aktifGorev;
+
             setTimeout(() => { aiKonus("Lütfen ekrana bir " + aktifGorev + " çiziniz."); }, 300);
+            
             sure = 60; document.getElementById('timer').innerText = sure;
             clearInterval(zamanlayici);
             zamanlayici = setInterval(() => {
