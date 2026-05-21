@@ -150,12 +150,12 @@
         </div>
     </div>
 
-    <!-- YENİ: HAYVANLAR VS ZOMBİLER (PVZ) OYUNU -->
+    <!-- HAYVANLAR VS ZOMBİLER (PVZ) OYUNU -->
     <div id="pvz-page" class="page">
         <div class="container" style="max-width: 850px;">
             <h1>🌻 Hayvanlar vs Zombiler 🧟</h1>
             <div class="game-meta">
-                <div>Altın: <span id="pvz-coins-display" style="color: #fbbf24;">15</span> 🪙</div>
+                <div>Altın: <span id="pvz-coins-display" style="color: #fbbf24;">25</span> 🪙</div>
                 <div>Wave: <span id="pvz-wave-display" style="color: #38ef7d;">1</span></div>
             </div>
             
@@ -345,12 +345,12 @@
         }
 
         // =======================================================
-        // YENİ: HAYVANLAR VS ZOMBİLER MOTORU
+        // HAYVANLAR VS ZOMBİLER MOTORU
         // =======================================================
         let pvzCanvas, pvzCtx;
         let pvzAnimId;
         let pvzState = 'market'; 
-        let pvzCoins = 15;
+        let pvzCoins = 25; // 15'ten 25'e yükseltildi
         let pvzWave = 1;
         let pvzGrid = [];
         let pvzZombies = [];
@@ -373,7 +373,7 @@
             pvzCanvas = document.getElementById('pvzCanvas');
             pvzCtx = pvzCanvas.getContext('2d');
             pvzState = 'market';
-            pvzCoins = 15;
+            pvzCoins = 25; // 15'ten 25'e yükseltildi
             pvzWave = 1;
             pvzGameActive = true;
             pvzZombies = [];
