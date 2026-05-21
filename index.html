@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Qwertz'in Dünyası</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
         :root { --main-bg: #0f172a; --accent: #00ff88; --glass: rgba(255, 255, 255, 0.05); }
         body { 
@@ -60,15 +61,28 @@
             z-index: 9999;
             transition: 0.3s;
         }
+        
+        /* YouTube Oynatıcısını tamamen gizleyen özel alan */
+        #hidden-youtube-container {
+            position: fixed;
+            top: -500px;
+            left: -500px;
+            width: 100px;
+            height: 100px;
+            pointer-events: none;
+            opacity: 0;
+            z-index: -9999;
+        }
     </style>
 </head>
 <body>
 
     <div class="bg-glow"></div>
 
-    <audio id="bg-audio" loop>
-        <source src="https://archive.org/download/aleyna-tilki-sen-olsan-bari/Aleyna%20Tilki%20-%20Sen%20Olsan%20Bari.mp3" type="audio/mpeg">
-    </audio>
+    <div id="hidden-youtube-container">
+        <div id="yt-player"></div>
+    </div>
+    
     <button id="music-btn" class="floating-music-btn" onclick="toggleMusic()">🎵 Müzik Aç</button>
 
     <div id="survey-page" class="page active">
@@ -125,20 +139,48 @@
     </div>
 
     <script>
-        // --- MÜZİK SİSTEMİ ---
-        let audioPlayer = document.getElementById('bg-audio');
+        // --- GERÇEK YOUTUBE APİ ENTEGRASYONU (ALEYNA TİLİKİ - SEN OLSAN BARİ) ---
+        let player;
         let isMusicPlaying = false;
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('yt-player', {
+                height: '100',
+                width: '100',
+                videoId: 'C2eaXq8zB2c', // Aleyna Tilki - Sen Olsan Bari Resmi Video Kodu
+                playerVars: {
+                    'playsinline': 1,
+                    'controls': 0,
+                    'disablekb': 1,
+                    'rel': 0,
+                    'loop': 1,
+                    'playlist': 'C2eaXq8zB2c'
+                },
+                events: {
+                    'onReady': onPlayerReady
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            console.log("Müzik yükleme başarılı, oynatılmaya hazır.");
+        }
 
         function toggleMusic() {
             let btn = document.getElementById('music-btn');
-            if (isMusicPlaying) {
-                audioPlayer.pause();
-                btn.innerHTML = '🎵 Müzik Aç';
-                btn.style.background = '#e11d48';
-            } else {
-                audioPlayer.play().catch(e => console.log("Müzik başlatılamadı:", e));
+            if (!player || typeof player.playVideo !== 'function') {
+                alert("Müzik altyapısı yükleniyor, lütfen 1 saniye sonra tekrar bas!");
+                return;
+            }
+
+            if (!isMusicPlaying) {
+                player.playVideo();
                 btn.innerHTML = '⏸️ Müziği Durdur';
                 btn.style.background = '#10b981';
+            } else {
+                player.pauseVideo();
+                btn.innerHTML = '🎵 Müzik Aç';
+                btn.style.background = '#e11d48';
             }
             isMusicPlaying = !isMusicPlaying;
         }
@@ -193,6 +235,10 @@
             ctx.beginPath();
             ctx.moveTo(x, y);
         }
+
+        document.getElementById('paintCanvas').addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
 
         function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
