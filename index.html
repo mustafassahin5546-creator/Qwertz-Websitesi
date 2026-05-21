@@ -78,8 +78,9 @@
         .card-down { background: #334155; border: 2px solid #475569; color: #cbd5e1; font-size: 24px; }
         .card-up { background: #1e293b; border: 2px solid #3b82f6; transform: rotateY(180deg); }
 
-        /* GEOMETRY DASH STİLLERİ */
+        /* GEOMETRY DASH VE PACMAN STİLLERİ */
         #gdCanvas { background: linear-gradient(to bottom, #1d4ed8, #1e1b4b); border-radius: 15px; border: 3px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); display: block; margin: 15px 0; touch-action: none; width: 100%; max-width: 400px; height: auto;}
+        #pacCanvas { background: #000; border-radius: 10px; border: 3px solid #eab308; box-shadow: 0 0 20px rgba(234, 179, 8, 0.4); display: block; margin: 15px auto; touch-action: none; width: 100%; max-width: 300px; }
         .gd-tip { font-size: 13px; color: #94a3b8; margin-top: 5px; }
 
         /* MAYIN TARLASI STİLLERİ */
@@ -143,14 +144,27 @@
             <button class="btn-game" style="background:#8b5cf6;" onclick="gecSayfa('memory-page')">🎴 HAFIZA KARTLARI OYUNU</button>
             <button class="btn-game" style="background:#06b6d4;" onclick="gecSayfa('gd-page')">🔺 GEOMETRY DASH MINI</button>
             <button class="btn-game" style="background:#65a30d;" onclick="gecSayfa('mines-page')">💣 MAYIN TARLASI</button>
-            <!-- YENİ OYUN BUTONU -->
             <button class="btn-game" style="background:#22c55e;" onclick="gecSayfa('pvz-page')">🌻 HAYVANLAR VS ZOMBİLER</button>
+            <!-- YENİ OYUN BUTONU -->
+            <button class="btn-game" style="background:#eab308;" onclick="gecSayfa('pacman-page')">🟡 PACMAN MINIGAME</button>
 
             <div class="review-section">
                 <div class="beta-warning-box">
                     🛠️ Yorum yapma sistemi beta testindedir.
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- PACMAN SAYFASI -->
+    <div id="pacman-page" class="page">
+        <div class="container">
+            <h1>🟡 Pacman Minigame</h1>
+            <div class="game-meta"><div>Skor: <span id="pac-score" style="color: #f59e0b;">0</span></div></div>
+            <canvas id="pacCanvas" width="300" height="300"></canvas>
+            <div class="gd-tip">Yön tuşları veya kaydırarak hareket et!</div>
+            <button class="btn-clear" style="background: #eab308; color: #000; font-weight: bold;" onclick="initPacman()">🔄 Yeniden Başlat</button>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
         </div>
     </div>
 
@@ -308,7 +322,7 @@
                 alert("💻 OP Mod Aktifleştirildi!");
                 
                 // Anında Etkiler
-                if (pvzCoins !== undefined) { pvzCoins = 10000; updatePvzUI(); }
+                if (typeof pvzCoins !== 'undefined') { pvzCoins = 10000; if(typeof updatePvzUI === 'function') updatePvzUI(); }
                 opMayinlariGoster(true);
                 opKartlariGoster(true);
                 document.querySelector('.op-btn').style.borderColor = "#f59e0b";
@@ -318,7 +332,7 @@
                 alert("💻 OP Mod Kapatıldı!");
                 
                 // Anında Geri Al
-                if (pvzCoins > 25) { pvzCoins = 25; updatePvzUI(); }
+                if (typeof pvzCoins !== 'undefined' && pvzCoins > 25) { pvzCoins = 25; if(typeof updatePvzUI === 'function') updatePvzUI(); }
                 opMayinlariGoster(false);
                 opKartlariGoster(false);
                 document.querySelector('.op-btn').style.borderColor = "#475569";
@@ -395,7 +409,7 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             
-            oynaBitir(); tavsanOyunuBitir(); gdOyunuBitir(); minesOyunuBitir();
+            oynaBitir(); tavsanOyunuBitir(); gdOyunuBitir(); minesOyunuBitir(); pacOyunuBitir();
             pvzGameActive = false; if(pvzAnimId) cancelAnimationFrame(pvzAnimId); // PVZ Durdur
 
             if(id === 'game-page') { cizimSkor = 0; oyunBaslat(); }
@@ -405,7 +419,217 @@
             else if(id === 'mines-page') minesOyunuBaslat();
             else if(id === 'freedraw-page') initFreeCanvas();
             else if(id === 'pvz-page') initPvz();
+            else if(id === 'pacman-page') initPacman();
         }
+
+        // =======================================================
+        // PACMAN MOTORU
+        // =======================================================
+        let pacCanvas, pacCtx, pacAnimId, pacGameActive = false;
+        let pacScore = 0, pacDotsCount = 0;
+        let pac = { x: 20, y: 20, vx: 0, vy: 0 };
+        let pacNextVx = 0, pacNextVy = 0;
+        let pacGhosts = [];
+        let pacMapState = [];
+        const pacSpeed = 2;
+        
+        // 1: Duvar, 0: Yem, 2: Boşluk (15x15 Grid)
+        const pacBaseMap = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,0,1,0,1,0,1,1,0,1],
+            [1,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+            [1,1,1,0,1,1,1,1,1,1,1,0,1,1,1],
+            [1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,2,2,2,1,1,1,1,0,1],
+            [1,0,1,2,2,2,2,2,2,2,2,2,1,0,1],
+            [1,0,1,1,1,1,2,2,2,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+            [1,1,1,0,1,1,1,1,1,1,1,0,1,1,1],
+            [1,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+            [1,0,1,1,0,1,0,1,0,1,0,1,1,0,1],
+            [1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        function initPacman() {
+            pacCanvas = document.getElementById('pacCanvas');
+            pacCtx = pacCanvas.getContext('2d');
+            pacScore = 0;
+            document.getElementById('pac-score').innerText = pacScore;
+            
+            pacMapState = JSON.parse(JSON.stringify(pacBaseMap));
+            pacDotsCount = 0;
+            for(let r=0; r<15; r++){
+                for(let c=0; c<15; c++){
+                    if(pacMapState[r][c] === 0) pacDotsCount++;
+                }
+            }
+
+            pac = { x: 20, y: 20, vx: 0, vy: 0 };
+            pacNextVx = 0; pacNextVy = 0;
+
+            pacGhosts = [
+                {x: 140, y: 140, vx: 1, vy: 0, color: '#ef4444'},
+                {x: 140, y: 140, vx: -1, vy: 0, color: '#3b82f6'},
+                {x: 120, y: 140, vx: 0, vy: -1, color: '#f472b6'}
+            ];
+
+            pacGameActive = true;
+            if(pacAnimId) cancelAnimationFrame(pacAnimId);
+            pacLoop();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if(!pacGameActive) return;
+            if(e.key === 'ArrowUp') { pacNextVx = 0; pacNextVy = -1; e.preventDefault(); }
+            if(e.key === 'ArrowDown') { pacNextVx = 0; pacNextVy = 1; e.preventDefault(); }
+            if(e.key === 'ArrowLeft') { pacNextVx = -1; pacNextVy = 0; e.preventDefault(); }
+            if(e.key === 'ArrowRight') { pacNextVx = 1; pacNextVy = 0; e.preventDefault(); }
+        });
+
+        let pacTouchX = 0, pacTouchY = 0;
+        document.addEventListener('touchstart', e => { pacTouchX = e.touches[0].clientX; pacTouchY = e.touches[0].clientY; }, {passive:false});
+        document.addEventListener('touchend', e => {
+            if(!pacGameActive || e.target.id !== 'pacCanvas') return;
+            let dx = e.changedTouches[0].clientX - pacTouchX;
+            let dy = e.changedTouches[0].clientY - pacTouchY;
+            if(Math.abs(dx) > Math.abs(dy)) {
+                if(dx > 20) { pacNextVx = 1; pacNextVy = 0; } else if(dx < -20) { pacNextVx = -1; pacNextVy = 0; }
+            } else {
+                if(dy > 20) { pacNextVx = 0; pacNextVy = 1; } else if(dy < -20) { pacNextVx = 0; pacNextVy = -1; }
+            }
+        });
+
+        function pacCanMove(px, py) {
+            let r1 = Math.floor(py / 20), c1 = Math.floor(px / 20);
+            let r2 = Math.floor((py + 19) / 20), c2 = Math.floor((px + 19) / 20);
+            if (pacMapState[r1] === undefined || pacMapState[r2] === undefined) return false;
+            if (pacMapState[r1][c1] === 1 || pacMapState[r1][c2] === 1 ||
+                pacMapState[r2][c1] === 1 || pacMapState[r2][c2] === 1) return false;
+            return true;
+        }
+
+        function pacLoop() {
+            if(!pacGameActive) return;
+
+            // Oyuncu Hareketi
+            if (pacCanMove(pac.x + pacNextVx * pacSpeed, pac.y + pacNextVy * pacSpeed)) {
+                pac.vx = pacNextVx; pac.vy = pacNextVy;
+            }
+            if (pacCanMove(pac.x + pac.vx * pacSpeed, pac.y + pac.vy * pacSpeed)) {
+                pac.x += pac.vx * pacSpeed; pac.y += pac.vy * pacSpeed;
+            }
+
+            // Yem Yeme
+            let centerC = Math.floor((pac.x + 10) / 20);
+            let centerR = Math.floor((pac.y + 10) / 20);
+            if (pacMapState[centerR] && pacMapState[centerR][centerC] === 0) {
+                pacMapState[centerR][centerC] = 2;
+                pacScore += 10;
+                pacDotsCount--;
+                document.getElementById('pac-score').innerText = pacScore;
+                
+                if(pacDotsCount <= 0) {
+                    pacGameActive = false;
+                    confetti({particleCount: 150, spread: 80});
+                    alert("🏆 TEBRİKLER! Tüm yemleri yedin!");
+                    gecSayfa('survey-page');
+                    return;
+                }
+            }
+
+            // Hayalet Hareketi
+            for(let i=0; i<pacGhosts.length; i++) {
+                let g = pacGhosts[i];
+                if (!pacCanMove(g.x + g.vx * pacSpeed, g.y + g.vy * pacSpeed)) {
+                    let dirs = [{vx:1,vy:0}, {vx:-1,vy:0}, {vx:0,vy:1}, {vx:0,vy:-1}];
+                    let validDirs = dirs.filter(d => pacCanMove(g.x + d.vx * pacSpeed, g.y + d.vy * pacSpeed));
+                    if(validDirs.length > 0) {
+                        let chosen = validDirs[Math.floor(Math.random() * validDirs.length)];
+                        g.vx = chosen.vx; g.vy = chosen.vy;
+                    }
+                }
+                if (g.x % 20 === 0 && g.y % 20 === 0 && Math.random() < 0.25) {
+                    let dirs = [{vx:1,vy:0}, {vx:-1,vy:0}, {vx:0,vy:1}, {vx:0,vy:-1}];
+                    let validDirs = dirs.filter(d => pacCanMove(g.x + d.vx * pacSpeed, g.y + d.vy * pacSpeed) && (d.vx !== -g.vx || d.vy !== -g.vy));
+                    if(validDirs.length > 0) {
+                        let chosen = validDirs[Math.floor(Math.random() * validDirs.length)];
+                        g.vx = chosen.vx; g.vy = chosen.vy;
+                    }
+                }
+                g.x += g.vx * pacSpeed;
+                g.y += g.vy * pacSpeed;
+
+                // Çarpışma ve Hile (OP Mod) Kontrolü
+                if (!opModAktif) {
+                    if (Math.abs(pac.x - g.x) < 15 && Math.abs(pac.y - g.y) < 15) {
+                        pacGameActive = false;
+                        alert("💥 Hayalete Yakalandın! Skorun: " + pacScore);
+                        initPacman();
+                        return;
+                    }
+                }
+            }
+
+            // Çizim
+            pacCtx.clearRect(0, 0, 300, 300);
+            for(let r=0; r<15; r++){
+                for(let c=0; c<15; c++){
+                    if(pacMapState[r][c] === 1) {
+                        pacCtx.fillStyle = '#1e3a8a';
+                        pacCtx.fillRect(c*20, r*20, 20, 20);
+                        pacCtx.strokeStyle = '#3b82f6';
+                        pacCtx.strokeRect(c*20, r*20, 20, 20);
+                    } else if (pacMapState[r][c] === 0) {
+                        pacCtx.fillStyle = '#fde047';
+                        pacCtx.beginPath();
+                        pacCtx.arc(c*20+10, r*20+10, 3, 0, Math.PI*2);
+                        pacCtx.fill();
+                    }
+                }
+            }
+            
+            // Pacman Çizimi
+            pacCtx.fillStyle = '#eab308';
+            pacCtx.beginPath();
+            let mouthOffset = (Math.sin(Date.now() / 100) + 1) * 0.15;
+            let startAngle = mouthOffset * Math.PI;
+            let endAngle = (2 - mouthOffset) * Math.PI;
+            
+            pacCtx.save();
+            pacCtx.translate(pac.x+10, pac.y+10);
+            if(pac.vx === -1) pacCtx.rotate(Math.PI);
+            else if(pac.vy === 1) pacCtx.rotate(Math.PI/2);
+            else if(pac.vy === -1) pacCtx.rotate(-Math.PI/2);
+            
+            pacCtx.arc(0, 0, 8, startAngle, endAngle);
+            pacCtx.lineTo(0, 0);
+            pacCtx.fill();
+            pacCtx.restore();
+
+            // Hayalet Çizimi
+            pacGhosts.forEach(g => {
+                pacCtx.fillStyle = opModAktif ? '#9ca3af' : g.color; // OP modda hayaletler grileşir
+                pacCtx.beginPath();
+                pacCtx.arc(g.x+10, g.y+10, 8, Math.PI, 0);
+                pacCtx.lineTo(g.x+18, g.y+18);
+                pacCtx.lineTo(g.x+14, g.y+16);
+                pacCtx.lineTo(g.x+10, g.y+18);
+                pacCtx.lineTo(g.x+6, g.y+16);
+                pacCtx.lineTo(g.x+2, g.y+18);
+                pacCtx.fill();
+            });
+
+            pacAnimId = requestAnimationFrame(pacLoop);
+        }
+
+        function pacOyunuBitir() {
+            pacGameActive = false;
+            if(pacAnimId) cancelAnimationFrame(pacAnimId);
+        }
+        // =======================================================
+
 
         // =======================================================
         // HAYVANLAR VS ZOMBİLER MOTORU
@@ -942,4 +1166,4 @@
         function minesOyunuBitir() { minesGameActive = false; }
     </script>
 </body>
-                    </html>
+</html>
