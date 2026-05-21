@@ -34,8 +34,8 @@
         .color-box.selected { border-color: #ffffff; transform: scale(1.15); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
 
         .game-meta { display: flex; justify-content: space-between; width: 100%; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
-        #timer, #rabbit-timer { color: #ef4444; }
-        #ai-task, #rabbit-score { color: #38ef7d; font-size: 20px; text-shadow: 0 0 10px rgba(56,239,125,0.4); }
+        #timer, #rabbit-timer, #mines-count { color: #ef4444; }
+        #ai-task, #rabbit-score, #mines-status { color: #38ef7d; font-size: 20px; text-shadow: 0 0 10px rgba(56,239,125,0.4); }
 
         .overlay-error { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); border-radius: 25px; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
         .crossmark { font-size: 80px; color: #ef4444; }
@@ -80,6 +80,16 @@
         /* GEOMETRY DASH STİLLERİ */
         #gdCanvas { background: linear-gradient(to bottom, #1d4ed8, #1e1b4b); border-radius: 15px; border: 3px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); display: block; margin: 15px 0; touch-action: none; }
         .gd-tip { font-size: 13px; color: #94a3b8; margin-top: 5px; }
+
+        /* MAYIN TARLASI STİLLERİ */
+        .mine-cell {
+            aspect-ratio: 1; background: #334155; border-radius: 6px; display: flex;
+            align-items: center; justify-content: center; font-weight: bold; font-size: 16px;
+            cursor: pointer; user-select: none; border: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;
+        }
+        .mine-cell:hover { background: #475569; }
+        .mine-cell.revealed { background: #1e293b; cursor: default; }
+        .mine-cell.mine { background: #ef4444; }
     </style>
 </head>
 <body>
@@ -113,8 +123,9 @@
             <button class="btn-game" onclick="gecSayfa('game-page')">🎮 YAPAY ZEKA ÇİZİM OYUNU</button>
             <button class="btn-game" style="background:#10b981;" onclick="gecSayfa('rabbit-page')">🐇 KARNAVAL TAVŞAN AVCISI</button>
             <button class="btn-game" style="background:#8b5cf6;" onclick="gecSayfa('memory-page')">🎴 HAFIZA KARTLARI OYUNU</button>
-            <!-- GEOMETRY DASH BUTONU -->
             <button class="btn-game" style="background:#06b6d4;" onclick="gecSayfa('gd-page')">🔺 GEOMETRY DASH MINI</button>
+            <!-- MAYIN TARLASI BUTONU -->
+            <button class="btn-game" style="background:#65a30d;" onclick="gecSayfa('mines-page')">💣 MAYIN TARLASI</button>
 
             <div class="review-section">
                 <div class="beta-warning-box">
@@ -205,6 +216,25 @@
         </div>
     </div>
 
+    <!-- MAYIN TARLASI OYUN SAYFASI -->
+    <div id="mines-page" class="page">
+        <div class="container">
+            <h1>💣 Mayın Tarlası</h1>
+            <div class="game-meta">
+                <div>Kalan Mayın: <span id="mines-count">10</span></div>
+                <div>Durum: <span id="mines-status">Devam Ediyor</span></div>
+            </div>
+            
+            <div id="mines-grid" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; margin: 20px 0; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 15px;">
+                <!-- Hücreler JS ile dolacak -->
+            </div>
+
+            <div class="gd-tip" style="margin-bottom: 10px;">Açmak için Tıkla, Bayrak için Sağ Tıkla (veya Basılı Tut)!</div>
+            <button class="btn-clear" style="background: #65a30d;" onclick="minesOyunuBaslat()">🔄 Yeniden Başlat</button>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
+        </div>
+    </div>
+
     <script>
         // --- GELİŞTİRİCİ GİRİŞİ (RICK ROLL) ---
         function devGiris() {
@@ -269,11 +299,13 @@
             oynaBitir(); 
             tavsanOyunuBitir();
             gdOyunuBitir();
+            minesOyunuBitir();
 
             if(id === 'game-page') oyunBaslat();
             else if(id === 'rabbit-page') tavsanOyunuBaslat();
             else if(id === 'memory-page') hafizaOyunuBaslat();
             else if(id === 'gd-page') gdOyunuBaslat();
+            else if(id === 'mines-page') minesOyunuBaslat();
         }
 
         // --- MİNİGAME 3: HAFIZA KARTLARI OYUNU ---
@@ -674,6 +706,179 @@
             gdActive = false;
             if(gdAnimId) cancelAnimationFrame(gdAnimId);
             window.removeEventListener('keydown', gdZiplamaKlavye);
+        }
+
+
+        // --- MİNİGAME 5: MAYIN TARLASI MOTORU ---
+        const minesRows = 8;
+        const minesCols = 8;
+        const totalMines = 10;
+        let minesBoard = [];
+        let minesLeft = totalMines;
+        let minesGameActive = true;
+
+        function minesOyunuBaslat() {
+            minesGameActive = true;
+            minesLeft = totalMines;
+            document.getElementById('mines-count').innerText = minesLeft;
+            document.getElementById('mines-status').innerText = "Devam Ediyor";
+            document.getElementById('mines-status').style.color = "#3b82f6";
+            
+            const grid = document.getElementById('mines-grid');
+            grid.innerHTML = '';
+            minesBoard = [];
+
+            // Boş tahta matrisi kurulumu
+            for (let r = 0; r < minesRows; r++) {
+                minesBoard[r] = [];
+                for (let c = 0; c < minesCols; c++) {
+                    minesBoard[r][c] = {
+                        r: r, c: c, isMine: false, isRevealed: false, isFlagged: false, count: 0
+                    };
+                }
+            }
+
+            // Rastgele konumlara mayın ekleme
+            let minesPlaced = 0;
+            while (minesPlaced < totalMines) {
+                let r = Math.floor(Math.random() * minesRows);
+                let c = Math.floor(Math.random() * minesCols);
+                if (!minesBoard[r][c].isMine) {
+                    minesBoard[r][c].isMine = true;
+                    minesPlaced++;
+                }
+            }
+
+            // Çevre hücrelerdeki mayın sayılarını hesaplama
+            for (let r = 0; r < minesRows; r++) {
+                for (let c = 0; c < minesCols; c++) {
+                    if (minesBoard[r][c].isMine) continue;
+                    let count = 0;
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            if (minesBoard[r + dr] && minesBoard[r + dr][c + dc] && minesBoard[r + dr][c + dc].isMine) {
+                                count++;
+                            }
+                        }
+                    }
+                    minesBoard[r][c].count = count;
+                }
+            }
+
+            // Grid hücre elementlerini dinamik oluşturma
+            for (let r = 0; r < minesRows; r++) {
+                for (let c = 0; c < minesCols; c++) {
+                    const cellEl = document.createElement('div');
+                    cellEl.classList.add('mine-cell');
+                    cellEl.id = `cell-${r}-${c}`;
+                    
+                    // Hücre açma tıkı
+                    cellEl.addEventListener('click', () => cellClick(r, c));
+                    
+                    // Bayrak koyma (Sağ tık)
+                    cellEl.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        cellFlag(r, c);
+                    });
+
+                    grid.appendChild(cellEl);
+                }
+            }
+        }
+
+        function cellClick(r, c) {
+            if (!minesGameActive) return;
+            let cell = minesBoard[r][c];
+            if (cell.isRevealed || cell.isFlagged) return;
+
+            cell.isRevealed = true;
+            const cellEl = document.getElementById(`cell-${r}-${c}`);
+            cellEl.classList.add('revealed');
+
+            if (cell.isMine) {
+                cellEl.classList.add('mine');
+                cellEl.innerText = "💣";
+                minesOyunBitti(false);
+                return;
+            }
+
+            if (cell.count > 0) {
+                cellEl.innerText = cell.count;
+                const renkler = ["", "#3b82f6", "#10b981", "#ef4444", "#8b5cf6", "#f59e0b", "#06b6d4", "#ec4899", "#ffffff"];
+                cellEl.style.color = renkler[cell.count];
+            } else {
+                // Zincirleme genişleme reaksiyonu (Komşuları otomatik tetikler)
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        if (minesBoard[r + dr] && minesBoard[r + dr][c + dc]) {
+                            cellClick(r + dr, c + dc);
+                        }
+                    }
+                }
+            }
+
+            minesKazanmaKontrol();
+        }
+
+        function cellFlag(r, c) {
+            if (!minesGameActive) return;
+            let cell = minesBoard[r][c];
+            if (cell.isRevealed) return;
+
+            const cellEl = document.getElementById(`cell-${r}-${c}`);
+            if (!cell.isFlagged) {
+                cell.isFlagged = true;
+                cellEl.innerText = "🚩";
+                cellEl.style.color = "#f59e0b";
+                minesLeft--;
+            } else {
+                cell.isFlagged = false;
+                cellEl.innerText = "";
+                minesLeft++;
+            }
+            document.getElementById('mines-count').innerText = Math.max(0, minesLeft);
+        }
+
+        function minesKazanmaKontrol() {
+            let win = true;
+            for (let r = 0; r < minesRows; r++) {
+                for (let c = 0; c < minesCols; c++) {
+                    if (!minesBoard[r][c].isMine && !minesBoard[r][c].isRevealed) {
+                        win = false;
+                    }
+                }
+            }
+            if (win) minesOyunBitti(true);
+        }
+
+        function minesOyunBitti(kazandi) {
+            minesGameActive = false;
+            const statusEl = document.getElementById('mines-status');
+            
+            for (let r = 0; r < minesRows; r++) {
+                for (let c = 0; c < minesCols; c++) {
+                    if (minesBoard[r][c].isMine) {
+                        const cellEl = document.getElementById(`cell-${r}-${c}`);
+                        if(!minesBoard[r][c].isRevealed) {
+                            cellEl.innerText = "💣";
+                            cellEl.style.background = kazandi ? "#10b981" : "#ef4444";
+                        }
+                    }
+                }
+            }
+
+            if (kazandi) {
+                statusEl.innerText = "KAZANDIN! 🏆";
+                statusEl.style.color = "#10b981";
+                confetti({particleCount: 150, spread: 80});
+            } else {
+                statusEl.innerText = "PATLADIN! 💥";
+                statusEl.style.color = "#ef4444";
+            }
+        }
+
+        function minesOyunuBitir() {
+            minesGameActive = false;
         }
     </script>
 </body>
