@@ -40,14 +40,9 @@
         .overlay-error { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); border-radius: 25px; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
         .crossmark { font-size: 80px; color: #ef4444; }
 
-        /* YORUM BÖLÜMÜ */
-        .review-section { margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; text-align: left; }
-        .review-section h3 { color: #00d2ff; margin-bottom: 15px; font-size: 18px; text-align: center; }
-        .comment-input { width: 100%; height: 60px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; padding: 10px; box-sizing: border-box; font-size: 14px; resize: none; margin-bottom: 10px; }
-        .btn-comment { background: #3b82f6; color: white; width: 100%; border-radius: 12px; padding: 10px; font-size: 14px; }
-        
-        #comments-list { margin-top: 20px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .comment-item { background: rgba(255,255,255,0.03); border-left: 3px solid #00ff88; padding: 10px; border-radius: 6px; font-size: 14px; word-wrap: break-word; }
+        /* BETA TEST UYARI BÖLÜMÜ */
+        .review-section { margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
+        .beta-warning-box { background: rgba(59, 130, 246, 0.15); border: 1px dashed #3b82f6; color: #93c5fd; padding: 15px; border-radius: 15px; font-size: 15px; font-weight: 500; text-align: center; letter-spacing: 0.5px; }
 
         /* SAĞ ALT KÖŞE MÜZİK BUTONU */
         .floating-music-btn {
@@ -72,7 +67,7 @@
     <div class="bg-glow"></div>
 
     <audio id="bg-audio" loop>
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+        <source src="https://archive.org/download/aleyna-tilki-sen-olsan-bari/Aleyna%20Tilki%20-%20Sen%20Olsan%20Bari.mp3" type="audio/mpeg">
     </audio>
     <button id="music-btn" class="floating-music-btn" onclick="toggleMusic()">🎵 Müzik Aç</button>
 
@@ -88,12 +83,9 @@
             <button class="btn-game" onclick="gecSayfa('game-page')">🎮 YAPAY ZEKA ÇİZİM OYUNU</button>
 
             <div class="review-section">
-                <h3>✍️ Ziyaretçi Yorumları</h3>
-                <textarea id="comment-text" class="comment-input" placeholder="Sitem hakkında bir yorum bırakın..."></textarea>
-                <button class="btn-comment" onclick="yorumGonder()">Yorumu Gönder</button>
-                
-                <div id="comments-list">
-                    </div>
+                <div class="beta-warning-box">
+                    🛠️ Yorum yapma sistemi beta testindedir.
+                </div>
             </div>
 
         </div>
@@ -149,30 +141,6 @@
                 btn.style.background = '#10b981';
             }
             isMusicPlaying = !isMusicPlaying;
-        }
-
-        // --- YORUM SİSTEMİ ---
-        window.onload = function() {
-            let kayitliYorumlar = localStorage.getItem('qwertz_yorumlar');
-            if (kayitliYorumlar) {
-                document.getElementById('comments-list').innerHTML = kayitliYorumlar;
-            }
-        };
-
-        function yorumGonder() {
-            const input = document.getElementById('comment-text');
-            let mesaj = input.value.trim();
-            if (mesaj === "") return;
-
-            const list = document.getElementById('comments-list');
-            let yeniYorum = `<div class="comment-item"><strong>Ziyaretçi:</strong> ${mesaj}</div>`;
-            
-            list.insertAdjacentHTML('beforeend', yeniYorum);
-            localStorage.setItem('qwertz_yorumlar', list.innerHTML);
-            
-            input.value = "";
-            list.scrollTop = list.scrollHeight;
-            confetti({particleCount: 20, spread: 30});
         }
 
         // --- SAYFA VE OYUN MOTORU ---
