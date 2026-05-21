@@ -535,14 +535,26 @@
 
                     if (proj.x > 850) { pvzProjectiles.splice(i, 1); continue; }
 
-                    // Zombi ile Çarpışma Kontrolü
+                    // Zombi ile Çarpışma Kontrolü (GÜNCELLENDİ: Arkadaki zombilere de hasar ver)
+                    let isHit = false;
                     for (let j = 0; j < pvzZombies.length; j++) {
                         let z = pvzZombies[j];
                         if (z.row === proj.row && Math.abs(z.x - proj.x) < 40) {
-                            z.hp -= proj.dmg;
-                            pvzProjectiles.splice(i, 1);
+                            isHit = true;
                             break;
                         }
+                    }
+                    
+                    if (isHit) {
+                        for (let j = 0; j < pvzZombies.length; j++) {
+                            let z = pvzZombies[j];
+                            // Aynı satırda ve merminin temas ettiği yerin arkasında (sağında) kalan tüm zombiler hasar alır
+                            if (z.row === proj.row && z.x >= proj.x - 40) {
+                                z.hp -= proj.dmg;
+                            }
+                        }
+                        pvzProjectiles.splice(i, 1);
+                        continue;
                     }
                 }
 
