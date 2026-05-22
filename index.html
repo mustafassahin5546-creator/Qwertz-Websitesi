@@ -3,726 +3,1392 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Süper Yapay Zeka Oyun Konsolu</title>
-    <!-- Confetti JS -->
+    <title>Qwertz'in Dünyası</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --panel-bg: #1e293b;
-            --text-color: #f8fafc;
-            --primary: #3b82f6;
-            --accent: #10b981;
-            --danger: #ef4444;
+        :root { --main-bg: #0f172a; --accent: #00ff88; --glass: rgba(255, 255, 255, 0.05); }
+        body { 
+            font-family: 'Segoe UI', sans-serif; background: var(--main-bg); color: #fff; 
+            margin: 0; min-height: 100vh; text-align: center;
+            user-select: none; -webkit-user-select: none;
         }
+        .page { display: none; padding: 20px; }
+        .active { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        .bg-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%); z-index: -1; }
+        
+        .container { background: var(--glass); backdrop-filter: blur(15px); padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); max-width: 500px; width: 90%; position: relative; margin-bottom: 20px; box-sizing: border-box; }
+        h1 { color: var(--accent); font-size: 24px; text-shadow: 0 0 15px rgba(0,255,136,0.3); margin-top: 0; }
+        
+        button { padding: 12px 25px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 16px; }
+        .btn-game { background: #f59e0b; color: #fff; width: 80%; margin-top: 10px; font-size: 16px; }
+        .btn-evet { background: #10b981; color: #fff; flex: 1; }
+        .btn-hayir { background: #ef4444; color: #fff; flex: 1; }
+        .btn-control { background: #3b82f6; color: white; width: 100%; margin-top: 15px; }
+        .btn-clear { background: #64748b; color: white; width: 100%; margin-top: 5px; }
+        .btn-back { background: #475569; color: white; margin-top: 20px; }
+        
+        /* Çizim Alanı */
+        #paintCanvas { background: #ffffff; border-radius: 15px; border: 3px solid #334155; cursor: crosshair; touch-action: none; margin: 15px 0 5px 0; width: 100%; max-width: 300px; height: auto; aspect-ratio: 1/1; }
+        .color-palette { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; padding: 5px; background: rgba(0,0,0,0.2); border-radius: 50px; }
+        .color-box { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+        .color-box.selected { border-color: #ffffff; transform: scale(1.15); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        .game-meta { display: flex; justify-content: space-between; width: 100%; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        #timer, #rabbit-timer, #mines-count { color: #ef4444; }
+        #ai-task, #rabbit-score, #mines-status { color: #38ef7d; font-size: 20px; text-shadow: 0 0 10px rgba(56,239,125,0.4); }
 
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+        .overlay-error { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); border-radius: 25px; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+        .crossmark { font-size: 80px; color: #ef4444; }
 
-        .controls {
-            background: var(--panel-bg);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-            justify-content: center;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        }
+        /* BETA TEST UYARI BÖLÜMÜ */
+        .review-section { margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
+        .beta-warning-box { background: rgba(59, 130, 246, 0.15); border: 1px dashed #3b82f6; color: #93c5fd; padding: 12px; border-radius: 15px; font-size: 14px; text-align: center; }
 
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
+        /* ANKET SONUÇLARI STİLİ */
+        .anket-sonuc { display: flex; justify-content: space-around; margin-top: 15px; font-size: 15px; font-weight: bold; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; }
+        .sonuc-evet { color: #34d399; }
+        .sonuc-hayir { color: #f87171; }
 
-        button:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.1);
-        }
+        /* BUTONLAR */
+        .dev-btn { position: fixed; top: 20px; left: 20px; background: #4f46e5; color: white; border: none; border-radius: 50px; padding: 10px 20px; font-size: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); z-index: 9999; font-weight: bold; }
+        .floating-music-btn { position: fixed; top: 20px; right: 20px; background: #e11d48; color: white; border: none; border-radius: 50px; padding: 8px 15px; font-size: 12px; cursor: pointer; box-shadow: 0 5px 20px rgba(225, 29, 72, 0.4); z-index: 9999; transition: 0.3s; }
+        /* OP MOD BUTONU YENİ */
+        .op-btn { position: fixed; bottom: 20px; left: 20px; background: #1e293b; color: white; border: 2px solid #475569; border-radius: 50%; width: 45px; height: 45px; font-size: 20px; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); z-index: 9999; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+        .op-btn:hover { background: #334155; border-color: #f59e0b; }
 
-        .btn-danger { background: var(--danger); }
-        .btn-accent { background: var(--accent); }
+        /* ŞEFFAF ARKA PLAN YAZISI */
+        .watermark { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 13px; color: rgba(255, 255, 255, 0.15); font-weight: bold; pointer-events: none; z-index: 999; letter-spacing: 1px; }
 
-        .op-toggle {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: bold;
-            color: #fbbf24;
-        }
+        /* TARLA VE TAVŞAN OYUNU DİZAYNI */
+        .tarla-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; background: #1e3a1e; padding: 15px; border-radius: 20px; border: 4px solid #3f6212; }
+        .delik { height: 90px; background: #78350f; border-radius: 50% / 30%; position: relative; overflow: hidden; box-shadow: inset 0 10px 10px rgba(0,0,0,0.6); }
+        .tavsan { width: 70px; height: 70px; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="60" r="25" fill="%23d1d5db"/><circle cx="40" cy="55" r="3" fill="black"/><circle cx="60" cy="55" r="3" fill="black"/><ellipse cx="38" cy="25" rx="8" ry="22" fill="%23d1d5db"/><ellipse cx="38" cy="25" rx="4" ry="15" fill="%23f472b6"/><ellipse cx="62" cy="25" rx="8" ry="22" fill="%23d1d5db"/><ellipse cx="62" cy="25" rx="4" ry="15" fill="%23f472b6"/><circle cx="50" cy="62" r="4" fill="%23f472b6"/></svg>') no-repeat center bottom; position: absolute; bottom: -80px; left: 50%; transform: translateX(-50%); transition: bottom 0.2s ease; cursor: pointer; }
+        .delik.aktif .tavsan { bottom: 5px; }
+        
+        /* BOM Efekti */
+        .bom-efekt { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #f59e0b; font-weight: 900; font-size: 24px; text-shadow: 0 0 10px #ef4444; animation: bomAnim 0.4s ease-out forwards; pointer-events: none; display: none; }
+        @keyframes bomAnim { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
 
-        .page {
-            display: none;
-            background: var(--panel-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            width: 100%;
-            max-width: 500px;
-            text-align: center;
-        }
+        /* KART EŞLEŞTİRME OYUNU DİZAYNI */
+        .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; perspective: 1000px; }
+        .memory-card { width: 100%; aspect-ratio: 1; position: relative; transform-style: preserve-3d; transition: transform 0.5s; cursor: pointer; }
+        .memory-card:active { transform: scale(0.95); transition: transform 0.2s; }
+        .memory-card.flipped { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; font-size: 32px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: 0.3s; }
+        .card-down { background: #334155; border: 2px solid #475569; color: #cbd5e1; font-size: 24px; }
+        .card-up { background: #1e293b; border: 2px solid #3b82f6; transform: rotateY(180deg); }
 
-        .page.active {
-            display: block;
-        }
+        /* GEOMETRY DASH, PACMAN VE MAZE STİLLERİ */
+        #gdCanvas { background: linear-gradient(to bottom, #1d4ed8, #1e1b4b); border-radius: 15px; border: 3px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); display: block; margin: 15px 0; touch-action: none; width: 100%; max-width: 400px; height: auto;}
+        #pacCanvas { background: #000; border-radius: 10px; border: 3px solid #eab308; box-shadow: 0 0 20px rgba(234, 179, 8, 0.4); display: block; margin: 15px auto; touch-action: none; width: 100%; max-width: 300px; }
+        #mazeCanvas { background: #0f172a; border-radius: 10px; border: 3px solid #dc2626; box-shadow: 0 0 20px rgba(220, 38, 38, 0.4); display: block; margin: 15px auto; touch-action: none; width: 100%; max-width: 300px; }
+        .gd-tip { font-size: 13px; color: #94a3b8; margin-top: 5px; }
 
-        canvas {
-            background: #cbd5e1;
-            border-radius: 8px;
-            margin: 10px 0;
-            max-width: 100%;
-        }
-
-        /* Mayın Tarlası Stilleri */
-        .mines-grid {
-            display: grid;
-            gap: 2px;
-            background: #475569;
-            padding: 4px;
-            border-radius: 8px;
-            margin: 10px auto;
-            width: fit-content;
-        }
-
+        /* MAYIN TARLASI STİLLERİ */
         .mine-cell {
-            width: 35px;
-            height: 35px;
-            background: #94a3b8;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 18px;
-            cursor: pointer;
-            user-select: none;
+            aspect-ratio: 1; background: #334155; border-radius: 6px; display: flex;
+            align-items: center; justify-content: center; font-weight: bold; font-size: 16px;
+            cursor: pointer; user-select: none; border: 1px solid rgba(255,255,255,0.05); transition: 0.2s;
         }
-
-        .mine-cell.revealed { background: #e2e8f0; cursor: default; }
+        .mine-cell:hover { background: #475569; }
+        .mine-cell.revealed { background: #1e293b; cursor: default; }
         .mine-cell.mine { background: #ef4444; }
 
-        .status-text {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        /* Çizim Oyunu Error Screen */
-        #error-screen {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.9);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            z-index: 100;
-        }
+        /* ÖZGÜRCE RESİM YAP STİLLERİ */
+        #freeCanvas { background: #ffffff; border-radius: 10px; border: 3px solid #334155; cursor: crosshair; touch-action: none; margin: 15px 0; width: 100%; max-width: 800px; height: auto; aspect-ratio: 16/9; box-shadow: 0 0 20px rgba(0,0,0,0.4); }
+        .freedraw-toolbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; }
+        .fd-btn-tool { padding: 8px 15px; font-size: 14px; border-radius: 8px; background: #475569; color: white; border: 2px solid transparent; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .fd-btn-tool:hover { background: #64748b; }
+        .fd-btn-tool.active-tool { background: #3b82f6; border-color: #ffffff; box-shadow: 0 0 10px rgba(59, 130, 246, 0.6); }
+        .fd-control-group { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 8px; }
+        .fd-palette { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; }
+        .fd-color-box { width: 25px; height: 25px; border-radius: 50%; cursor: pointer; border: 2px solid #cbd5e1; transition: 0.2s; }
+        .fd-color-box:hover { transform: scale(1.2); }
+        select, input[type="range"], input[type="color"] { cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>🎮 Yapay Zeka Oyun Merkezi</h1>
-    </div>
+    <div class="bg-glow"></div>
+    
+    <div class="watermark">mustafassahin5546-creator tarafından yapılmıştır</div>
 
-    <div class="controls">
-        <button onclick="gecSayfa('labirent-page')">Labirent</button>
-        <button onclick="gecSayfa('cizim-page')">Çizim Oyunu</button>
-        <button onclick="gecSayfa('gd-page')">Geometry Dash</button>
-        <button onclick="gecSayfa('mines-page')">Mayın Tarlası</button>
-        <div class="op-toggle">
-            <input type="checkbox" id="opMod" onchange="opModGuncelle()">
-            <label for="opMod">⚡ OP Mod (Hile/Kolaylık)</label>
+    <!-- OP MOD BUTONU -->
+    <button class="op-btn" onclick="opModuAyarla()" title="Kod Gir">💻</button>
+    
+    <button class="dev-btn" onclick="devGiris()">🛠️ Geliştirici</button>
+
+    <audio id="bg-audio" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" type="audio/mpeg">
+    </audio>
+    <button id="music-btn" class="floating-music-btn" onclick="toggleMusic()">🎵 Müzik Aç</button>
+
+    <!-- ANA MENÜ -->
+    <div id="survey-page" class="page active">
+        <div class="container">
+            <h1>Qwertz'in Websitesine Hoşgeldiniz!</h1>
+            <p style="font-size: 18px; color: #cbd5e1;">Web sitem güzel olmuş mu?</p>
+            
+            <div style="display: flex; gap: 15px; width: 80%; margin: 0 auto 10px auto;">
+                <button id="btn-evet" class="btn-evet" onclick="oyVer('evet')">EVET 👍</button>
+                <button id="btn-hayir" class="btn-hayir" onclick="oyVer('hayir')">HAYIR 👎</button>
+            </div>
+
+            <div class="anket-sonuc">
+                <div class="sonuc-evet">Evet Oyları: <span id="evet-sayi">0</span></div>
+                <div class="sonuc-hayir">Hayır Oyları: <span id="hayir-sayi">0</span></div>
+            </div>
+
+            <button class="btn-game" style="background:#db2777;" onclick="gecSayfa('freedraw-page')">🎨 ÖZGÜRCE RESİM YAP</button>
+            <button class="btn-game" onclick="gecSayfa('game-page')">🎮 YAPAY ZEKA ÇİZİM OYUNU</button>
+            <button class="btn-game" style="background:#10b981;" onclick="gecSayfa('rabbit-page')">🐇 KARNAVAL TAVŞAN AVCISI</button>
+            <button class="btn-game" style="background:#8b5cf6;" onclick="gecSayfa('memory-page')">🎴 HAFIZA KARTLARI OYUNU</button>
+            <button class="btn-game" style="background:#06b6d4;" onclick="gecSayfa('gd-page')">🔺 GEOMETRY DASH MINI</button>
+            <button class="btn-game" style="background:#65a30d;" onclick="gecSayfa('mines-page')">💣 MAYIN TARLASI</button>
+            <button class="btn-game" style="background:#22c55e;" onclick="gecSayfa('pvz-page')">🌻 HAYVANLAR VS ZOMBİLER</button>
+            <button class="btn-game" style="background:#eab308;" onclick="gecSayfa('pacman-page')">🟡 PACMAN MINIGAME</button>
+            <button class="btn-game" style="background:#dc2626;" onclick="gecSayfa('maze-page')">🧭 LABİRENTTEN KAÇIŞ</button>
+
+            <div class="review-section">
+                <div class="beta-warning-box">
+                    🛠️ Yorum yapma sistemi beta testindedir.
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- LABİRENT OYUNU (Dinamik ve Zorlaştırılmış) -->
-    <div id="labirent-page" class="page active">
-        <h2>Dinamik Labirent</h2>
-        <p>Her seferinde rastgele, zorlu bir harita! W, A, S, D veya Ok tuşları ile çıkışa (yeşil) ulaş.</p>
-        <canvas id="mazeCanvas" width="400" height="400"></canvas>
-        <div>
-            <button class="btn-accent" onclick="yeniLabirentOlustur()">Yeni Zorlu Harita Üret</button>
+    <!-- LABİRENT SAYFASI -->
+    <div id="maze-page" class="page">
+        <div class="container">
+            <h1>🧭 Labirentten Kaçış</h1>
+            <canvas id="mazeCanvas" width="300" height="300"></canvas>
+            <div class="gd-tip">Yön tuşları veya kaydırarak çıkışı (Yeşil Kutu) bul!</div>
+            <button class="btn-clear" style="background: #dc2626; color: white; font-weight: bold;" onclick="initMaze()">🔄 Yeniden Başlat</button>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
         </div>
     </div>
 
-    <!-- ÇİZİM OYUNU -->
-    <div id="cizim-page" class="page">
-        <h2>Yapay Zeka Çizim Tahmini</h2>
-        <h3 id="cizim-gorev">Görev: ... Çiz!</h3>
-        <p>Süre: <span id="cizim-sure">15</span> sn | Skor: <span id="cizim-skor">0</span></p>
-        <canvas id="drawCanvas" width="300" height="300" style="background:#fff;"></canvas>
-        <div>
-            <button onclick="cizimTemizle()">Temizle</button>
-            <button class="btn-accent" onclick="aiTarama()">Tahmin Et</button>
+    <!-- PACMAN SAYFASI -->
+    <div id="pacman-page" class="page">
+        <div class="container">
+            <h1>🟡 Pacman Minigame</h1>
+            <div class="game-meta"><div>Skor: <span id="pac-score" style="color: #f59e0b;">0</span></div></div>
+            <canvas id="pacCanvas" width="300" height="300"></canvas>
+            <div class="gd-tip">Yön tuşları veya kaydırarak hareket et!</div>
+            <button class="btn-clear" style="background: #eab308; color: #000; font-weight: bold;" onclick="initPacman()">🔄 Yeniden Başlat</button>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
         </div>
     </div>
 
-    <!-- GEOMETRY DASH -->
+    <!-- HAYVANLAR VS ZOMBİLER (PVZ) OYUNU -->
+    <div id="pvz-page" class="page">
+        <div class="container" style="max-width: 850px;">
+            <h1>🌻 Hayvanlar vs Zombiler 🧟</h1>
+            <div class="game-meta">
+                <div>Altın: <span id="pvz-coins-display" style="color: #fbbf24;">25</span> 🪙</div>
+                <div>Wave: <span id="pvz-wave-display" style="color: #38ef7d;">1</span></div>
+            </div>
+            
+            <div style="position: relative; margin: 15px 0;">
+                <!-- Oyun Bahçesi -->
+                <canvas id="pvzCanvas" width="800" height="500" style="background: #4ade80; border: 4px solid #166534; border-radius: 10px; width: 100%; max-width: 800px; touch-action: none;"></canvas>
+                
+                <!-- Sadece bu oyunda görünen Market Sembolü (Sağ Köşede) -->
+                <button id="pvz-market-toggle" style="position: absolute; right: 10px; top: 10px; background: #fbbf24; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 5; transition: 0.2s;" onclick="togglePvzMarket()">🛒</button>
+                
+                <!-- Market Menüsü -->
+                <div id="pvz-market-container" style="display: none; position: absolute; right: 70px; top: 10px; background: rgba(15, 23, 42, 0.95); padding: 15px; border-radius: 10px; border: 2px solid #3b82f6; flex-direction: column; gap: 8px; z-index: 5; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
+                    <div style="color: #93c5fd; font-size: 15px; text-align: center; margin-bottom: 5px; font-weight: bold;">🛒 Bitki Market</div>
+                    <button id="btn-pvz-sinek" class="fd-btn-tool pvz-market-btn" onclick="pvzSelectPlant('sinek')">🪰 Sinek (5 🪙)</button>
+                    <button id="btn-pvz-kedi" class="fd-btn-tool pvz-market-btn" onclick="pvzSelectPlant('kedi')">🐱 Kedi (10 🪙)</button>
+                    <button id="btn-pvz-orumcek" class="fd-btn-tool pvz-market-btn" onclick="pvzSelectPlant('orumcek')">🕷️ Örümcek (20 🪙)</button>
+                    <button id="btn-pvz-yilan" class="fd-btn-tool pvz-market-btn" onclick="pvzSelectPlant('yilan')">🐍 Yılan (30 🪙)</button>
+                    <button id="btn-pvz-kopek" class="fd-btn-tool pvz-market-btn" onclick="pvzSelectPlant('kopek')">🐶 Köpek (40 🪙)</button>
+                    <div style="font-size: 11px; color: #cbd5e1; margin-top: 5px;">Satın almak için seçip<br>bahçeye tıkla!</div>
+                </div>
+            </div>
+
+            <button id="pvz-start-btn" class="btn-control" style="background: #eab308; font-size: 18px; padding: 12px; margin-bottom: 10px;" onclick="pvzStartWave()">🚀 WAVE 1 BAŞLAT</button>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
+        </div>
+    </div>
+
+    <!-- ÖZGÜRCE RESİM YAP SAYFASI -->
+    <div id="freedraw-page" class="page">
+        <div class="container" style="max-width: 850px;">
+            <h1>🎨 Özgürce Resim Yap</h1>
+            <div class="freedraw-toolbar">
+                <button id="btn-fd-brush" onclick="setFdTool('brush')" class="fd-btn-tool active-tool">🖌️ Fırça</button>
+                <button id="btn-fd-eraser" onclick="setFdTool('eraser')" class="fd-btn-tool">🧼 Silgi</button>
+                <button id="btn-fd-fill" onclick="setFdTool('fill')" class="fd-btn-tool">🪣 Doldur</button>
+                <div class="fd-control-group"><label style="font-size: 14px;">Kalınlık:</label><input type="range" id="fdSize" min="1" max="50" value="5" style="width: 80px;"></div>
+                <div class="fd-control-group"><label style="font-size: 14px;">Şekil:</label><select id="fdShape" style="border-radius: 5px; padding: 2px;"><option value="round">Yuvarlak</option><option value="square">Kare</option></select></div>
+                <div class="fd-control-group"><input type="color" id="fdColor" value="#000000"></div>
+                <button class="fd-btn-tool" style="background: #ef4444;" onclick="clearFreeCanvas()">🗑️ Temizle</button>
+            </div>
+            <div class="fd-palette">
+                <div class="fd-color-box" style="background: #000000;" onclick="setFdColor('#000000')"></div>
+                <div class="fd-color-box" style="background: #ffffff;" onclick="setFdColor('#ffffff')"></div>
+                <div class="fd-color-box" style="background: #94a3b8;" onclick="setFdColor('#94a3b8')"></div>
+                <div class="fd-color-box" style="background: #ef4444;" onclick="setFdColor('#ef4444')"></div>
+                <div class="fd-color-box" style="background: #f97316;" onclick="setFdColor('#f97316')"></div>
+                <div class="fd-color-box" style="background: #f59e0b;" onclick="setFdColor('#f59e0b')"></div>
+                <div class="fd-color-box" style="background: #84cc16;" onclick="setFdColor('#84cc16')"></div>
+                <div class="fd-color-box" style="background: #22c55e;" onclick="setFdColor('#22c55e')"></div>
+                <div class="fd-color-box" style="background: #06b6d4;" onclick="setFdColor('#06b6d4')"></div>
+                <div class="fd-color-box" style="background: #3b82f6;" onclick="setFdColor('#3b82f6')"></div>
+                <div class="fd-color-box" style="background: #8b5cf6;" onclick="setFdColor('#8b5cf6')"></div>
+                <div class="fd-color-box" style="background: #d946ef;" onclick="setFdColor('#d946ef')"></div>
+                <div class="fd-color-box" style="background: #ec4899;" onclick="setFdColor('#ec4899')"></div>
+                <div class="fd-color-box" style="background: #78350f;" onclick="setFdColor('#78350f')"></div>
+            </div>
+            <canvas id="freeCanvas" width="800" height="450"></canvas>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
+        </div>
+    </div>
+
+    <!-- HAFIZA SAYFASI -->
+    <div id="memory-page" class="page">
+        <div class="container">
+            <h1>🎴 Eşleri Bul!</h1>
+            <div class="game-meta"><div>Eşleşen: <span id="memory-score" style="color: #38ef7d;">0</span>/8</div></div>
+            <div class="memory-grid" id="memory-grid-container"></div>
+            <button class="btn-clear" onclick="hafizaOyunuBaslat()">🔄 Yeniden Dağıt</button>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
+        </div>
+    </div>
+
+    <!-- AI ÇİZİM SAYFASI -->
+    <div id="game-page" class="page">
+        <div class="container">
+            <h1>AI Çabuk Çiz! ✏️</h1>
+            <div class="game-meta"><div>Süre: <span id="timer">60</span>s</div><div>Görev: <span id="ai-task">-</span></div></div>
+            <canvas id="paintCanvas" width="300" height="300"></canvas>
+            <div class="color-palette">
+                <div class="color-box selected" style="background: #0f172a;" onclick="setRenk('#0f172a', this)"></div>
+                <div class="color-box" style="background: #ef4444;" onclick="setRenk('#ef4444', this)"></div>
+                <div class="color-box" style="background: #f59e0b;" onclick="setRenk('#f59e0b', this)"></div>
+                <div class="color-box" style="background: #10b981;" onclick="setRenk('#10b981', this)"></div>
+                <div class="color-box" style="background: #3b82f6;" onclick="setRenk('#3b82f6', this)"></div>
+            </div>
+            <button class="btn-control" onclick="aiTarama()">🔍 YAPAY ZEKA KONTROL ETSİN</button>
+            <button class="btn-clear" onclick="clearCanvas()">🗑️ Temizle</button>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Geri Dön</button>
+            <div id="error-screen" class="overlay-error">
+                <div class="crossmark">❌</div>
+                <h2 style="color: #ef4444;">Yapay Zeka Benzetemedi!</h2>
+                <button onclick="yenidenDene()" style="background: #f59e0b; color: white; margin-top: 15px;">🔄 Yeni Görev Al</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAVŞAN SAYFASI -->
+    <div id="rabbit-page" class="page">
+        <div class="container">
+            <h1>🐇 Tavşan Avı Karnavalı</h1>
+            <div class="game-meta"><div>Süre: <span id="rabbit-timer">30</span>s</div><div>Skor: <span id="rabbit-score">0</span></div></div>
+            <div class="tarla-grid">
+                <div class="delik" id="hole-0"><div class="tavsan" onclick="tavsanVur(0)"></div><div class="bom-efekt">BOM!💥</div></div>
+                <div class="delik" id="hole-1"><div class="tavsan" onclick="tavsanVur(1)"></div><div class="bom-efekt">BOM!💥</div></div>
+                <div class="delik" id="hole-2"><div class="tavsan" onclick="tavsanVur(2)"></div><div class="bom-efekt">BOM!💥</div></div>
+                <div class="delik" id="hole-3"><div class="tavsan" onclick="tavsanVur(3)"></div><div class="bom-efekt">BOM!💥</div></div>
+                <div class="delik" id="hole-4"><div class="tavsan" onclick="tavsanVur(4)"></div><div class="bom-efekt">BOM!💥</div></div>
+                <div class="delik" id="hole-5"><div class="tavsan" onclick="tavsanVur(5)"></div><div class="bom-efekt">BOM!💥</div></div>
+            </div>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
+        </div>
+    </div>
+
+    <!-- GD SAYFASI -->
     <div id="gd-page" class="page">
-        <h2>Geometry Dash Mini</h2>
-        <p>Zıplamak için BOŞLUK veya dokun.</p>
-        <p>İlerleme: <span id="gd-progress">0%</span> | Rekor: <span id="gd-highscore">0%</span></p>
-        <canvas id="gdCanvas" width="400" height="200" style="background:#1e293b;"></canvas>
-        <div>
-            <button class="btn-accent" onclick="gdOyunuBaslat()">Başla / Yeniden Oyna</button>
+        <div class="container">
+            <h1>🔺 Geometry Dash Mini</h1>
+            <div class="game-meta"><div>İlerleme: <span id="gd-progress" style="color: #00ff88;">0%</span></div><div>En Yüksek: <span id="gd-highscore" style="color: #f59e0b;">0%</span></div></div>
+            <canvas id="gdCanvas" width="400" height="200"></canvas>
+            <div class="gd-tip">Zıplamak için Ekrana Dokun, Tıkla veya Boşluk (Space) Tuşuna Bas!</div>
+            <button class="btn-clear" style="background: #06b6d4;" onclick="gdOyunuBaslat()">🔄 Baştan Başla</button>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
         </div>
     </div>
 
-    <!-- MAYIN TARLASI -->
+    <!-- MAYIN TARLASI SAYFASI -->
     <div id="mines-page" class="page">
-        <h2>Mayın Tarlası</h2>
-        <p>Kalan Mayın: <span id="mines-count">10</span></p>
-        <div id="mines-status" class="status-text">Başlamak için tıkla</div>
-        <div id="mines-grid" class="mines-grid" style="grid-template-columns: repeat(8, 1fr);"></div>
-        <div>
-            <button class="btn-accent" onclick="minesOyunuBaslat()">Yeniden Başlat</button>
+        <div class="container">
+            <h1>💣 Mayın Tarlası</h1>
+            <div class="game-meta"><div>Kalan Mayın: <span id="mines-count">10</span></div><div>Durum: <span id="mines-status">Devam Ediyor</span></div></div>
+            <div id="mines-grid" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; margin: 20px 0; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 15px;"></div>
+            <div class="gd-tip" style="margin-bottom: 10px;">Açmak için Tıkla, Bayrak için Sağ Tıkla (veya Basılı Tut)!</div>
+            <button class="btn-clear" style="background: #65a30d;" onclick="minesOyunuBaslat()">🔄 Yeniden Başlat</button>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
         </div>
-    </div>
-
-    <!-- Çizim Kaybetme Ekranı -->
-    <div id="error-screen">
-        <h2>Yapay Zeka Çizimi Anlayamadı!</h2>
-        <p>Belki daha iyi çizebilirdin?</p>
-        <button class="btn-accent" onclick="yenidenDene()">Tekrar Dene</button>
     </div>
 
     <script>
+        // --- OP MOD DEĞİŞKENLERİ VE FONKSİYONLARI ---
         let opModAktif = false;
-        
-        function opModGuncelle() {
-            opModAktif = document.getElementById('opMod').checked;
-            // OP mod değiştiğinde mevcut labirenti tekrar çiz (rotayı göstermek için)
-            if(document.getElementById('labirent-page').classList.contains('active')) {
-                labirentCiz();
+
+        function opModuAyarla() {
+            let sifre = prompt("Kodu giriniz:");
+            if (sifre === "5546") {
+                opModAktif = true;
+                alert("💻 OP Mod Aktifleştirildi!");
+                
+                // Anında Etkiler
+                if (typeof pvzCoins !== 'undefined') { pvzCoins = 10000; if(typeof updatePvzUI === 'function') updatePvzUI(); }
+                opMayinlariGoster(true);
+                opKartlariGoster(true);
+                if (document.getElementById('maze-page').classList.contains('active')) drawMaze();
+                document.querySelector('.op-btn').style.borderColor = "#f59e0b";
+                document.querySelector('.op-btn').style.color = "#f59e0b";
+            } else if (sifre === "4655") {
+                opModAktif = false;
+                alert("💻 OP Mod Kapatıldı!");
+                
+                // Anında Geri Al
+                if (typeof pvzCoins !== 'undefined' && pvzCoins > 25) { pvzCoins = 25; if(typeof updatePvzUI === 'function') updatePvzUI(); }
+                opMayinlariGoster(false);
+                opKartlariGoster(false);
+                if (document.getElementById('maze-page').classList.contains('active')) drawMaze();
+                document.querySelector('.op-btn').style.borderColor = "#475569";
+                document.querySelector('.op-btn').style.color = "white";
+            } else if (sifre !== null) {
+                alert("Hatalı Kod!");
             }
         }
 
-        function gecSayfa(sayfaId) {
+        function opMayinlariGoster(goster) {
+            if (typeof minesBoard === 'undefined' || minesBoard.length === 0) return;
+            for (let r = 0; r < minesRows; r++) {
+                for (let c = 0; c < minesCols; c++) {
+                    const el = document.getElementById(`cell-${r}-${c}`);
+                    if (el) {
+                        if (goster && minesBoard[r][c].isMine && !minesBoard[r][c].isRevealed) {
+                            el.style.boxShadow = "inset 0 0 15px rgba(239, 68, 68, 0.8)";
+                            el.style.border = "1px solid #ef4444";
+                        } else {
+                            el.style.boxShadow = "none";
+                            el.style.border = "1px solid rgba(255,255,255,0.05)";
+                        }
+                    }
+                }
+            }
+        }
+
+        function opKartlariGoster(goster) {
+            document.querySelectorAll('.memory-card').forEach(card => {
+                let downFace = card.querySelector('.card-down');
+                if (downFace) {
+                    downFace.innerText = goster ? card.dataset.emoji : '❓';
+                    downFace.style.color = goster ? 'rgba(255,255,255,0.5)' : '#cbd5e1';
+                }
+            });
+        }
+        // ------------------------------------------
+
+        function devGiris() {
+            let sifre = prompt("Geliştirici şifresini giriniz:");
+            if (sifre === "1234") { window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"; 
+            } else if (sifre !== null) { alert("Hatalı Şifre!"); }
+        }
+
+        let audioPlayer = document.getElementById('bg-audio');
+        let isMusicPlaying = false;
+        function toggleMusic() {
+            let btn = document.getElementById('music-btn');
+            if (isMusicPlaying) { audioPlayer.pause(); btn.innerHTML = '🎵 Müzik Aç'; btn.style.background = '#e11d48';
+            } else { audioPlayer.play().catch(e => console.log("Müzik engellendi:", e)); btn.innerHTML = '⏸️ Müziği Durdur'; btn.style.background = '#10b981'; }
+            isMusicPlaying = !isMusicPlaying;
+        }
+
+        window.onload = function() {
+            document.getElementById('evet-sayi').innerText = localStorage.getItem('site_evet') || 0;
+            document.getElementById('hayir-sayi').innerText = localStorage.getItem('site_hayir') || 0;
+            if(localStorage.getItem('oy_kullandi') === 'true') {
+                document.getElementById('btn-evet').disabled = true; document.getElementById('btn-hayir').disabled = true;
+            }
+            document.getElementById('gd-highscore').innerText = (localStorage.getItem('gd_highscore') || 0) + "%";
+        };
+
+        function oyVer(tip) {
+            confetti({particleCount: 80, spread: 60});
+            let mevcutOy = parseInt(localStorage.getItem('site_' + tip) || 0);
+            localStorage.setItem('site_' + tip, mevcutOy + 1);
+            localStorage.setItem('oy_kullandi', 'true');
+            document.getElementById(tip + '-sayi').innerText = mevcutOy + 1;
+            document.getElementById('btn-evet').disabled = true; document.getElementById('btn-hayir').disabled = true;
+            alert("Oyunuz başarıyla kaydedildi!");
+        }
+
+        function gecSayfa(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(sayfaId).classList.add('active');
+            document.getElementById(id).classList.add('active');
             
-            // Oyunları durdur/başlat
-            labirentOyunAktif = false;
-            gdOyunuBitir();
-            minesOyunuBitir();
+            oynaBitir(); tavsanOyunuBitir(); gdOyunuBitir(); minesOyunuBitir(); pacOyunuBitir(); mazeOyunuBitir();
+            pvzGameActive = false; if(pvzAnimId) cancelAnimationFrame(pvzAnimId); // PVZ Durdur
 
-            if(sayfaId === 'labirent-page') yeniLabirentOlustur();
-            if(sayfaId === 'cizim-page') oyunBaslat();
-            if(sayfaId === 'gd-page') gdOyunuBaslat();
-            if(sayfaId === 'mines-page') minesOyunuBaslat();
+            if(id === 'game-page') { cizimSkor = 0; oyunBaslat(); }
+            else if(id === 'rabbit-page') tavsanOyunuBaslat();
+            else if(id === 'memory-page') hafizaOyunuBaslat();
+            else if(id === 'gd-page') gdOyunuBaslat();
+            else if(id === 'mines-page') minesOyunuBaslat();
+            else if(id === 'freedraw-page') initFreeCanvas();
+            else if(id === 'pvz-page') initPvz();
+            else if(id === 'pacman-page') initPacman();
+            else if(id === 'maze-page') initMaze();
         }
 
-        // ==========================================
-        // DİNAMİK LABİRENT OYUNU
-        // ==========================================
-        let mazeCanvas = document.getElementById('mazeCanvas');
-        let mazeCtx = mazeCanvas.getContext('2d');
+        // =======================================================
+        // LABİRENT (MAZE) MOTORU VE OP MOD DESTEĞİ
+        // =======================================================
+        let mazeCanvas, mazeCtx, mazeGameActive = false;
+        let mazePlayer = { x: 1, y: 1 };
         
-        // Zorlaştırmak için boyutları büyüttük (Tek sayı olmalı)
-        let mazeCols = 31; 
-        let mazeRows = 31; 
-        let cellSize = mazeCanvas.width / mazeCols;
-        
-        let labirentHaritasi = [];
-        let oyuncuX = 1, oyuncuY = 1;
-        let cikisX = mazeCols - 2, cikisY = mazeRows - 2;
+        // 1: Duvar, 0: Yol, 2: Çıkış
+        const mazeGridTemplate = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+            [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
+            [1,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
+            [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,0,1,1,1,1,1,0,1,1,1],
+            [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+            [1,0,1,0,1,1,1,0,1,0,1,1,1,0,1],
+            [1,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
+            [1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+            [1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,0,2,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+        let mazeGrid = [];
 
-        function yeniLabirentOlustur() {
-            labirentOyunAktif = true;
-            cellSize = mazeCanvas.width / mazeCols;
-            
-            // Haritayı tamamen duvar (1) ile doldur
-            labirentHaritasi = Array(mazeRows).fill().map(() => Array(mazeCols).fill(1));
-            
-            // Derinlik Öncelikli Arama (Recursive Backtracker) Algoritması
-            function carve(x, y) {
-                labirentHaritasi[y][x] = 0; // Yolu aç
-                
-                // Yönleri rastgele karıştır
-                let dirs = [[0,-2], [0,2], [-2,0], [2,0]].sort(() => Math.random() - 0.5);
-                
-                for(let i=0; i<dirs.length; i++) {
-                    let dx = dirs[i][0];
-                    let dy = dirs[i][1];
-                    let nx = x + dx;
-                    let ny = y + dy;
-                    
-                    // Sınırların içinde mi ve gidilecek yer duvar mı?
-                    if(nx > 0 && nx < mazeCols-1 && ny > 0 && ny < mazeRows-1 && labirentHaritasi[ny][nx] === 1) {
-                        labirentHaritasi[y + dy/2][x + dx/2] = 0; // Aradaki duvarı yık
-                        carve(nx, ny); // İleri git
-                    }
-                }
-            }
-            
-            // Labirenti kazmaya başla
-            carve(1, 1);
-            
-            // Çıkışı belirle
-            labirentHaritasi[cikisY][cikisX] = 2;
-            
-            oyuncuX = 1;
-            oyuncuY = 1;
-            labirentCiz();
+        function initMaze() {
+            mazeCanvas = document.getElementById('mazeCanvas');
+            mazeCtx = mazeCanvas.getContext('2d');
+            mazeGrid = JSON.parse(JSON.stringify(mazeGridTemplate));
+            mazePlayer = { x: 1, y: 1 };
+            mazeGameActive = true;
+            drawMaze();
         }
 
-        // OP Mod için Hedefe Giden Yolu Bulma (BFS Algoritması)
-        function enKisaYoluBul() {
-            let queue = [{x: oyuncuX, y: oyuncuY, path: []}];
-            let visited = Array(mazeRows).fill().map(() => Array(mazeCols).fill(false));
-            visited[oyuncuY][oyuncuX] = true;
+        function drawMaze() {
+            if (!mazeGameActive) return;
+            mazeCtx.clearRect(0, 0, 300, 300);
 
-            let dirs = [[0,-1], [0,1], [-1,0], [1,0]];
-
-            while(queue.length > 0) {
-                let {x, y, path} = queue.shift();
-                
-                if (x === cikisX && y === cikisY) return path;
-
-                for (let i=0; i<dirs.length; i++) {
-                    let nx = x + dirs[i][0];
-                    let ny = y + dirs[i][1];
-
-                    if (nx >= 0 && ny >= 0 && nx < mazeCols && ny < mazeRows && labirentHaritasi[ny][nx] !== 1 && !visited[ny][nx]) {
-                        visited[ny][nx] = true;
-                        queue.push({x: nx, y: ny, path: [...path, {x: nx, y: ny}]});
-                    }
-                }
-            }
-            return [];
-        }
-
-        function labirentCiz() {
-            mazeCtx.clearRect(0, 0, mazeCanvas.width, mazeCanvas.height);
-            
-            // Labirent Duvarları
-            for (let r = 0; r < mazeRows; r++) {
-                for (let c = 0; c < mazeCols; c++) {
-                    if (labirentHaritasi[r][c] === 1) {
-                        mazeCtx.fillStyle = '#334155';
-                        mazeCtx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
-                    } else if (labirentHaritasi[r][c] === 2) {
-                        mazeCtx.fillStyle = '#10b981'; // Çıkış
-                        mazeCtx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+            // Haritayı Çiz
+            for(let r=0; r<15; r++){
+                for(let c=0; c<15; c++){
+                    if(mazeGrid[r][c] === 1) {
+                        mazeCtx.fillStyle = '#334155'; // Duvar rengi
+                        mazeCtx.fillRect(c*20, r*20, 20, 20);
+                        mazeCtx.strokeStyle = '#0f172a';
+                        mazeCtx.strokeRect(c*20, r*20, 20, 20);
+                    } else if (mazeGrid[r][c] === 2) {
+                        mazeCtx.fillStyle = '#22c55e'; // Çıkış
+                        mazeCtx.fillRect(c*20, r*20, 20, 20);
                     }
                 }
             }
 
-            // OP Mod Aktifse Çıkışa Kırmızı Çizgi Çek
+            // OP MOD AKTİFSE BFS İLE YOLU BUL VE ÇİZ (KIRMIZI OKLAR / YOL)
             if (opModAktif) {
-                let yol = enKisaYoluBul();
-                if (yol.length > 0) {
-                    mazeCtx.strokeStyle = "rgba(239, 68, 68, 0.7)"; // Yarı saydam kırmızı ok
-                    mazeCtx.lineWidth = cellSize / 3;
-                    mazeCtx.lineCap = "round";
-                    mazeCtx.lineJoin = "round";
+                let path = findMazePath(mazePlayer.x, mazePlayer.y);
+                if (path && path.length > 0) {
+                    mazeCtx.strokeStyle = 'rgba(220, 38, 38, 0.6)';
+                    mazeCtx.lineWidth = 4;
                     mazeCtx.beginPath();
-                    mazeCtx.moveTo(oyuncuX * cellSize + cellSize/2, oyuncuY * cellSize + cellSize/2);
-                    for (let n of yol) {
-                        mazeCtx.lineTo(n.x * cellSize + cellSize/2, n.y * cellSize + cellSize/2);
+                    mazeCtx.moveTo(mazePlayer.x * 20 + 10, mazePlayer.y * 20 + 10);
+                    for (let i = 1; i < path.length; i++) {
+                        mazeCtx.lineTo(path[i].x * 20 + 10, path[i].y * 20 + 10);
                     }
                     mazeCtx.stroke();
                 }
             }
 
-            // Oyuncu
+            // Oyuncuyu Çiz
             mazeCtx.fillStyle = '#3b82f6';
             mazeCtx.beginPath();
-            mazeCtx.arc(oyuncuX * cellSize + cellSize/2, oyuncuY * cellSize + cellSize/2, cellSize/3, 0, Math.PI * 2);
+            mazeCtx.arc(mazePlayer.x * 20 + 10, mazePlayer.y * 20 + 10, 7, 0, Math.PI*2);
             mazeCtx.fill();
+            mazeCtx.strokeStyle = '#fff';
+            mazeCtx.lineWidth = 1.5;
+            mazeCtx.stroke();
+        }
+
+        // Basit BFS Algoritması - Çıkışa giden yolu bulur
+        function findMazePath(startX, startY) {
+            let queue = [{x: startX, y: startY, path: [{x: startX, y: startY}]}];
+            let visited = new Set();
+            visited.add(`${startX},${startY}`);
+            
+            while(queue.length > 0) {
+                let curr = queue.shift();
+                if(mazeGrid[curr.y][curr.x] === 2) return curr.path;
+                
+                let dirs = [[0,-1],[0,1],[-1,0],[1,0]];
+                for(let d of dirs) {
+                    let nx = curr.x + d[0], ny = curr.y + d[1];
+                    if(nx >= 0 && nx < 15 && ny >= 0 && ny < 15 && mazeGrid[ny][nx] !== 1 && !visited.has(`${nx},${ny}`)) {
+                        visited.add(`${nx},${ny}`);
+                        queue.push({x: nx, y: ny, path: [...curr.path, {x: nx, y: ny}]});
+                    }
+                }
+            }
+            return null;
         }
 
         window.addEventListener('keydown', (e) => {
-            if (!labirentOyunAktif || !document.getElementById('labirent-page').classList.contains('active')) return;
+            if(!mazeGameActive || document.getElementById('maze-page').style.display === 'none' && !document.getElementById('maze-page').classList.contains('active')) return;
             
-            let yeniX = oyuncuX;
-            let yeniY = oyuncuY;
+            let nx = mazePlayer.x, ny = mazePlayer.y;
+            if(e.key === 'ArrowUp') { ny--; e.preventDefault(); }
+            if(e.key === 'ArrowDown') { ny++; e.preventDefault(); }
+            if(e.key === 'ArrowLeft') { nx--; e.preventDefault(); }
+            if(e.key === 'ArrowRight') { nx++; e.preventDefault(); }
 
-            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') yeniY--;
-            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') yeniY++;
-            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') yeniX--;
-            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') yeniX++;
-
-            // Duvar kontrolü (ve eğer hile aktifse oyuncu duvarların içinden geçebilir yapabilirdik ama yol göstermek yeterince OP)
-            if (yeniX >= 0 && yeniX < mazeCols && yeniY >= 0 && yeniY < mazeRows) {
-                if (labirentHaritasi[yeniY][yeniX] !== 1) {
-                    oyuncuX = yeniX;
-                    oyuncuY = yeniY;
-                    labirentCiz();
-
-                    // Kazanma Kontrolü
-                    if (oyuncuX === cikisX && oyuncuY === cikisY) {
-                        labirentOyunAktif = false;
-                        confetti({particleCount: 150, spread: 80});
-                        setTimeout(() => {
-                            alert("Tebrikler! Çıkışı buldun!");
-                            yeniLabirentOlustur(); // Otomatik yeni labirent
-                        }, 100);
-                    }
-                }
-            }
-            if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"].indexOf(e.code) > -1) {
-                e.preventDefault();
-            }
+            moveMazePlayer(nx, ny);
         });
 
-        // Başlangıçta ilk labirenti oluştur
-        yeniLabirentOlustur();
-
-
-        // ==========================================
-        // ÇİZİM OYUNU
-        // ==========================================
-        let drawCanvas = document.getElementById('drawCanvas');
-        let ctx = drawCanvas.getContext('2d');
-        let ciziliyor = false;
-        let gorevler = ["Kedi", "Araba", "Güneş", "Ev", "Ağaç", "Bilgisayar", "Gözlük"];
-        let aktifGorev = "";
-        let cizimSkor = 0;
-        let cizimSure = 15;
-        let zamanlayici;
-
-        drawCanvas.addEventListener('mousedown', baslaCizim);
-        drawCanvas.addEventListener('mousemove', ciz);
-        drawCanvas.addEventListener('mouseup', bitirCizim);
-        drawCanvas.addEventListener('mouseout', bitirCizim);
+        let mazeTouchX = 0, mazeTouchY = 0;
+        document.addEventListener('touchstart', e => { 
+            if(e.target.id === 'mazeCanvas') {
+                mazeTouchX = e.touches[0].clientX; mazeTouchY = e.touches[0].clientY; 
+            }
+        }, {passive:false});
         
-        // Touch support
-        drawCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); baslaCizim(e.touches[0]); }, {passive: false});
-        drawCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); ciz(e.touches[0]); }, {passive: false});
-        drawCanvas.addEventListener('touchend', bitirCizim);
-
-        function baslaCizim(e) {
-            ciziliyor = true;
-            ciz(e);
-        }
-
-        function ciz(e) {
-            if (!ciziliyor) return;
-            let rect = drawCanvas.getBoundingClientRect();
-            let x = (e.clientX || e.pageX) - rect.left;
-            let y = (e.clientY || e.pageY) - rect.top;
+        document.addEventListener('touchend', e => {
+            if(!mazeGameActive || e.target.id !== 'mazeCanvas') return;
+            let dx = e.changedTouches[0].clientX - mazeTouchX;
+            let dy = e.changedTouches[0].clientY - mazeTouchY;
             
-            ctx.lineWidth = 4;
-            ctx.lineCap = "round";
-            ctx.strokeStyle = "#000";
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-        }
-
-        function bitirCizim() {
-            ciziliyor = false;
-            ctx.beginPath();
-        }
-
-        function cizimTemizle() {
-            ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-        }
-
-        function oyunBaslat() {
-            cizimTemizle();
-            aktifGorev = gorevler[Math.floor(Math.random() * gorevler.length)];
-            document.getElementById('cizim-gorev').innerText = "Görev: " + aktifGorev + " Çiz!";
-            document.getElementById('cizim-skor').innerText = cizimSkor;
-            cizimSure = 15;
-            document.getElementById('cizim-sure').innerText = cizimSure;
-            
-            clearInterval(zamanlayici);
-            zamanlayici = setInterval(() => {
-                cizimSure--;
-                if(opModAktif) cizimSure++; // OP modda süre bitmez
-                document.getElementById('cizim-sure').innerText = cizimSure;
-                if(cizimSure <= 0) {
-                    clearInterval(zamanlayici);
-                    aiTarama();
-                }
-            }, 1000);
-            document.getElementById('error-screen').style.display = 'none';
-        }
-        
-        function aiTarama() {
-            clearInterval(zamanlayici);
-            let basariSansi = opModAktif ? 1.0 : 0.6; 
-            if (Math.random() < basariSansi) {
-                cizimSkor++;
-                confetti({particleCount: 150, spread: 80});
-                alert("🎉 Yapay Zeka bildi! Yeni bir göreve geçiliyor.");
-                oyunBaslat();
+            let nx = mazePlayer.x, ny = mazePlayer.y;
+            if(Math.abs(dx) > Math.abs(dy)) {
+                if(dx > 20) nx++; else if(dx < -20) nx--;
             } else {
-                document.getElementById('error-screen').style.display = 'flex';
+                if(dy > 20) ny++; else if(dy < -20) ny--;
+            }
+            moveMazePlayer(nx, ny);
+        });
+
+        function moveMazePlayer(nx, ny) {
+            if (nx >= 0 && nx < 15 && ny >= 0 && ny < 15 && mazeGrid[ny][nx] !== 1) {
+                mazePlayer.x = nx;
+                mazePlayer.y = ny;
+                drawMaze();
+
+                if (mazeGrid[ny][nx] === 2) {
+                    mazeGameActive = false;
+                    confetti({particleCount: 150, spread: 80});
+                    setTimeout(() => {
+                        alert("🎉 Çıkışı Buldun! Harika iş!");
+                        gecSayfa('survey-page');
+                    }, 100);
+                }
             }
         }
+
+        function mazeOyunuBitir() {
+            mazeGameActive = false;
+        }
+        // =======================================================
+
+
+        // =======================================================
+        // PACMAN MOTORU
+        // =======================================================
+        let pacCanvas, pacCtx, pacAnimId, pacGameActive = false;
+        let pacScore = 0, pacDotsCount = 0;
+        let pac = { x: 20, y: 20, vx: 0, vy: 0 };
+        let pacNextVx = 0, pacNextVy = 0;
+        let pacGhosts = [];
+        let pacMapState = [];
+        const pacSpeed = 2;
         
-        function yenidenDene() {
-            document.getElementById('error-screen').style.display = 'none';
-            oyunBaslat();
-        }
+        // 1: Duvar, 0: Yem, 2: Boşluk (15x15 Grid)
+        const pacBaseMap = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,0,1,0,1,0,1,1,0,1],
+            [1,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+            [1,1,1,0,1,1,1,1,1,1,1,0,1,1,1],
+            [1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,2,2,2,1,1,1,1,0,1],
+            [1,0,1,2,2,2,2,2,2,2,2,2,1,0,1],
+            [1,0,1,1,1,1,2,2,2,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+            [1,1,1,0,1,1,1,1,1,1,1,0,1,1,1],
+            [1,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+            [1,0,1,1,0,1,0,1,0,1,0,1,1,0,1],
+            [1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
 
-        // ==========================================
-        // GEOMETRY DASH MINI
-        // ==========================================
-        let gdCanvas = document.getElementById('gdCanvas');
-        let gdCtx = gdCanvas.getContext('2d');
-        let gdGameActive = false;
-        let gdAnimId;
-        let gdPlayer = { x: 50, y: 150, size: 20, vy: 0, gravity: 0.6, jumpPower: -10, isGrounded: true };
-        let gdObstacles = [];
-        let gdFrame = 0;
-        let gdProgress = 0;
-        let gdHighscore = parseInt(localStorage.getItem('gd_highscore') || 0);
-
-        function gdOyunuBaslat() {
-            gdGameActive = true;
-            gdPlayer.y = 150;
-            gdPlayer.vy = 0;
-            gdObstacles = [];
-            gdFrame = 0;
-            gdProgress = 0;
-            document.getElementById('gd-progress').innerText = "0%";
-            if(gdAnimId) cancelAnimationFrame(gdAnimId);
-            gdLoop();
-        }
-
-        function gdZiplama() {
-            if(gdPlayer.isGrounded && gdGameActive) {
-                gdPlayer.vy = gdPlayer.jumpPower;
-                gdPlayer.isGrounded = false;
+        function initPacman() {
+            pacCanvas = document.getElementById('pacCanvas');
+            pacCtx = pacCanvas.getContext('2d');
+            pacScore = 0;
+            document.getElementById('pac-score').innerText = pacScore;
+            
+            pacMapState = JSON.parse(JSON.stringify(pacBaseMap));
+            pacDotsCount = 0;
+            for(let r=0; r<15; r++){
+                for(let c=0; c<15; c++){
+                    if(pacMapState[r][c] === 0) pacDotsCount++;
+                }
             }
+
+            pac = { x: 20, y: 20, vx: 0, vy: 0 };
+            pacNextVx = 0; pacNextVy = 0;
+
+            pacGhosts = [
+                {x: 140, y: 140, vx: 1, vy: 0, color: '#ef4444'},
+                {x: 140, y: 140, vx: -1, vy: 0, color: '#3b82f6'},
+                {x: 120, y: 140, vx: 0, vy: -1, color: '#f472b6'}
+            ];
+
+            pacGameActive = true;
+            if(pacAnimId) cancelAnimationFrame(pacAnimId);
+            pacLoop();
         }
 
-        window.addEventListener('keydown', (e) => { 
-            if((e.code === 'Space' || e.code === 'ArrowUp') && document.getElementById('gd-page').classList.contains('active')) {
-                gdZiplama(); 
+        window.addEventListener('keydown', (e) => {
+            if(!pacGameActive || document.getElementById('pacman-page').style.display === 'none' && !document.getElementById('pacman-page').classList.contains('active')) return;
+            if(e.key === 'ArrowUp') { pacNextVx = 0; pacNextVy = -1; e.preventDefault(); }
+            if(e.key === 'ArrowDown') { pacNextVx = 0; pacNextVy = 1; e.preventDefault(); }
+            if(e.key === 'ArrowLeft') { pacNextVx = -1; pacNextVy = 0; e.preventDefault(); }
+            if(e.key === 'ArrowRight') { pacNextVx = 1; pacNextVy = 0; e.preventDefault(); }
+        });
+
+        let pacTouchX = 0, pacTouchY = 0;
+        document.addEventListener('touchstart', e => { 
+            if(e.target.id === 'pacCanvas') { pacTouchX = e.touches[0].clientX; pacTouchY = e.touches[0].clientY; }
+        }, {passive:false});
+        document.addEventListener('touchend', e => {
+            if(!pacGameActive || e.target.id !== 'pacCanvas') return;
+            let dx = e.changedTouches[0].clientX - pacTouchX;
+            let dy = e.changedTouches[0].clientY - pacTouchY;
+            if(Math.abs(dx) > Math.abs(dy)) {
+                if(dx > 20) { pacNextVx = 1; pacNextVy = 0; } else if(dx < -20) { pacNextVx = -1; pacNextVy = 0; }
+            } else {
+                if(dy > 20) { pacNextVx = 0; pacNextVy = 1; } else if(dy < -20) { pacNextVx = 0; pacNextVy = -1; }
             }
         });
-        gdCanvas.addEventListener('mousedown', gdZiplama);
-        gdCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); gdZiplama(); }, { passive: false });
 
-        function gdLoop() {
-            if(!gdGameActive) return;
-            gdCtx.clearRect(0, 0, gdCanvas.width, gdCanvas.height);
-            
-            gdPlayer.vy += gdPlayer.gravity;
-            gdPlayer.y += gdPlayer.vy;
-            if(gdPlayer.y >= 180 - gdPlayer.size) { 
-                gdPlayer.y = 180 - gdPlayer.size;
-                gdPlayer.vy = 0;
-                gdPlayer.isGrounded = true;
+        function pacCanMove(px, py) {
+            let r1 = Math.floor(py / 20), c1 = Math.floor(px / 20);
+            let r2 = Math.floor((py + 19) / 20), c2 = Math.floor((px + 19) / 20);
+            if (pacMapState[r1] === undefined || pacMapState[r2] === undefined) return false;
+            if (pacMapState[r1][c1] === 1 || pacMapState[r1][c2] === 1 ||
+                pacMapState[r2][c1] === 1 || pacMapState[r2][c2] === 1) return false;
+            return true;
+        }
+
+        function pacLoop() {
+            if(!pacGameActive) return;
+
+            // Oyuncu Hareketi
+            if (pacCanMove(pac.x + pacNextVx * pacSpeed, pac.y + pacNextVy * pacSpeed)) {
+                pac.vx = pacNextVx; pac.vy = pacNextVy;
+            }
+            if (pacCanMove(pac.x + pac.vx * pacSpeed, pac.y + pac.vy * pacSpeed)) {
+                pac.x += pac.vx * pacSpeed; pac.y += pac.vy * pacSpeed;
             }
 
-            gdCtx.fillStyle = '#1e293b';
-            gdCtx.fillRect(0, 180, gdCanvas.width, 20);
-            gdCtx.strokeStyle = '#3b82f6';
-            gdCtx.beginPath();
-            gdCtx.moveTo(0, 180);
-            gdCtx.lineTo(gdCanvas.width, 180);
-            gdCtx.stroke();
-
-            gdCtx.fillStyle = '#00ff88';
-            gdCtx.fillRect(gdPlayer.x, gdPlayer.y, gdPlayer.size, gdPlayer.size);
-
-            gdFrame++;
-            if(gdFrame % 90 === 0) {
-                gdObstacles.push({ x: gdCanvas.width, y: 160, width: 20, height: 20 });
+            // Yem Yeme
+            let centerC = Math.floor((pac.x + 10) / 20);
+            let centerR = Math.floor((pac.y + 10) / 20);
+            if (pacMapState[centerR] && pacMapState[centerR][centerC] === 0) {
+                pacMapState[centerR][centerC] = 2;
+                pacScore += 10;
+                pacDotsCount--;
+                document.getElementById('pac-score').innerText = pacScore;
+                
+                if(pacDotsCount <= 0) {
+                    pacGameActive = false;
+                    confetti({particleCount: 150, spread: 80});
+                    alert("🏆 TEBRİKLER! Tüm yemleri yedin!");
+                    gecSayfa('survey-page');
+                    return;
+                }
             }
 
-            for(let i = 0; i < gdObstacles.length; i++) {
-                let obs = gdObstacles[i];
-                obs.x -= opModAktif ? 2.5 : 5; 
+            // Hayalet Hareketi
+            for(let i=0; i<pacGhosts.length; i++) {
+                let g = pacGhosts[i];
+                if (!pacCanMove(g.x + g.vx * pacSpeed, g.y + g.vy * pacSpeed)) {
+                    let dirs = [{vx:1,vy:0}, {vx:-1,vy:0}, {vx:0,vy:1}, {vx:0,vy:-1}];
+                    let validDirs = dirs.filter(d => pacCanMove(g.x + d.vx * pacSpeed, g.y + d.vy * pacSpeed));
+                    if(validDirs.length > 0) {
+                        let chosen = validDirs[Math.floor(Math.random() * validDirs.length)];
+                        g.vx = chosen.vx; g.vy = chosen.vy;
+                    }
+                }
+                if (g.x % 20 === 0 && g.y % 20 === 0 && Math.random() < 0.25) {
+                    let dirs = [{vx:1,vy:0}, {vx:-1,vy:0}, {vx:0,vy:1}, {vx:0,vy:-1}];
+                    let validDirs = dirs.filter(d => pacCanMove(g.x + d.vx * pacSpeed, g.y + d.vy * pacSpeed) && (d.vx !== -g.vx || d.vy !== -g.vy));
+                    if(validDirs.length > 0) {
+                        let chosen = validDirs[Math.floor(Math.random() * validDirs.length)];
+                        g.vx = chosen.vx; g.vy = chosen.vy;
+                    }
+                }
+                g.x += g.vx * pacSpeed;
+                g.y += g.vy * pacSpeed;
 
-                gdCtx.fillStyle = '#ef4444';
-                gdCtx.fillRect(obs.x, obs.y, obs.width, obs.height);
-
+                // Çarpışma ve Hile (OP Mod) Kontrolü
                 if (!opModAktif) {
-                    if (gdPlayer.x < obs.x + obs.width &&
-                        gdPlayer.x + gdPlayer.size > obs.x &&
-                        gdPlayer.y < obs.y + obs.height &&
-                        gdPlayer.y + gdPlayer.size > obs.y) {
-                            gdGameActive = false;
-                            alert("💥 Oyun Bitti! İlerleme: %" + Math.floor(gdProgress));
-                            return;
+                    if (Math.abs(pac.x - g.x) < 15 && Math.abs(pac.y - g.y) < 15) {
+                        pacGameActive = false;
+                        alert("💥 Hayalete Yakalandın! Skorun: " + pacScore);
+                        initPacman();
+                        return;
                     }
                 }
             }
-            gdObstacles = gdObstacles.filter(o => o.x > -20);
 
-            gdProgress += 0.12;
-            if(gdProgress > 100) gdProgress = 100;
-            document.getElementById('gd-progress').innerText = Math.floor(gdProgress) + "%";
+            // Çizim
+            pacCtx.clearRect(0, 0, 300, 300);
+            for(let r=0; r<15; r++){
+                for(let c=0; c<15; c++){
+                    if(pacMapState[r][c] === 1) {
+                        pacCtx.fillStyle = '#1e3a8a';
+                        pacCtx.fillRect(c*20, r*20, 20, 20);
+                        pacCtx.strokeStyle = '#3b82f6';
+                        pacCtx.strokeRect(c*20, r*20, 20, 20);
+                    } else if (pacMapState[r][c] === 0) {
+                        pacCtx.fillStyle = '#fde047';
+                        pacCtx.beginPath();
+                        pacCtx.arc(c*20+10, r*20+10, 3, 0, Math.PI*2);
+                        pacCtx.fill();
+                    }
+                }
+            }
             
-            if(Math.floor(gdProgress) > gdHighscore) {
-                gdHighscore = Math.floor(gdProgress);
-                localStorage.setItem('gd_highscore', gdHighscore);
-                document.getElementById('gd-highscore').innerText = gdHighscore + "%";
-            }
+            // Pacman Çizimi
+            pacCtx.fillStyle = '#eab308';
+            pacCtx.beginPath();
+            let mouthOffset = (Math.sin(Date.now() / 100) + 1) * 0.15;
+            let startAngle = mouthOffset * Math.PI;
+            let endAngle = (2 - mouthOffset) * Math.PI;
+            
+            pacCtx.save();
+            pacCtx.translate(pac.x+10, pac.y+10);
+            if(pac.vx === -1) pacCtx.rotate(Math.PI);
+            else if(pac.vy === 1) pacCtx.rotate(Math.PI/2);
+            else if(pac.vy === -1) pacCtx.rotate(-Math.PI/2);
+            
+            pacCtx.arc(0, 0, 8, startAngle, endAngle);
+            pacCtx.lineTo(0, 0);
+            pacCtx.fill();
+            pacCtx.restore();
 
-            if(gdProgress >= 100) {
-                gdGameActive = false;
-                confetti({particleCount: 200, spread: 100});
-                alert("🏆 TEBRİKLER! Bölümü tamamladın!");
-                return;
-            }
+            // Hayalet Çizimi
+            pacGhosts.forEach(g => {
+                pacCtx.fillStyle = opModAktif ? '#9ca3af' : g.color; // OP modda hayaletler grileşir
+                pacCtx.beginPath();
+                pacCtx.arc(g.x+10, g.y+10, 8, Math.PI, 0);
+                pacCtx.lineTo(g.x+18, g.y+18);
+                pacCtx.lineTo(g.x+14, g.y+16);
+                pacCtx.lineTo(g.x+10, g.y+18);
+                pacCtx.lineTo(g.x+6, g.y+16);
+                pacCtx.lineTo(g.x+2, g.y+18);
+                pacCtx.fill();
+            });
 
-            gdAnimId = requestAnimationFrame(gdLoop);
+            pacAnimId = requestAnimationFrame(pacLoop);
         }
-        function gdOyunuBitir() { gdGameActive = false; if(gdAnimId) cancelAnimationFrame(gdAnimId); }
 
-        // ==========================================
-        // MAYIN TARLASI
-        // ==========================================
-        let minesRows = 8, minesCols = 8, minesCount = 10;
-        let minesBoard = [];
-        let minesGameActive = false;
-        let minesRemaining = minesCount;
+        function pacOyunuBitir() {
+            pacGameActive = false;
+            if(pacAnimId) cancelAnimationFrame(pacAnimId);
+        }
+        // =======================================================
 
-        function minesOyunuBaslat() {
-            minesGameActive = true;
-            minesRemaining = minesCount;
-            document.getElementById('mines-count').innerText = minesRemaining;
-            document.getElementById('mines-status').innerText = "Devam Ediyor";
-            document.getElementById('mines-status').style.color = "#38ef7d";
-            let grid = document.getElementById('mines-grid');
-            grid.innerHTML = '';
 
-            minesBoard = [];
-            for(let r = 0; r < minesRows; r++) {
-                minesBoard[r] = [];
-                for(let c = 0; c < minesCols; c++) {
-                    minesBoard[r][c] = { isMine: false, isRevealed: false, isFlagged: false, neighborCount: 0 };
-                    let cell = document.createElement('div');
-                    cell.className = 'mine-cell';
-                    cell.id = `cell-${r}-${c}`;
-                    cell.addEventListener('click', () => minesAc(r, c));
-                    cell.addEventListener('contextmenu', (e) => { e.preventDefault(); minesBayrak(r, c); });
-                    grid.appendChild(cell);
+        // =======================================================
+        // HAYVANLAR VS ZOMBİLER MOTORU
+        // =======================================================
+        let pvzCanvas, pvzCtx;
+        let pvzAnimId;
+        let pvzState = 'market'; 
+        let pvzCoins = 25; 
+        let pvzWave = 1;
+        let pvzGrid = [];
+        let pvzZombies = [];
+        let pvzProjectiles = [];
+        let pvzSelectedPlant = null;
+        let pvzZombiesToSpawn = 0;
+        let pvzSpawnTimer = 0;
+        let pvzLastTime = 0;
+        let pvzGameActive = false;
+
+        const pvzData = {
+            'sinek': { cost: 5, emoji: '🪰', dmg: 2 },
+            'kedi': { cost: 10, emoji: '🐱', dmg: 5 },
+            'orumcek': { cost: 20, emoji: '🕷️', dmg: 10 },
+            'yilan': { cost: 30, emoji: '🐍', dmg: 20 },
+            'kopek': { cost: 40, emoji: '🐶', dmg: 100 }
+        };
+
+        function initPvz() {
+            pvzCanvas = document.getElementById('pvzCanvas');
+            pvzCtx = pvzCanvas.getContext('2d');
+            pvzState = 'market';
+            
+            // HİLE KONTROLÜ
+            pvzCoins = opModAktif ? 10000 : 25; 
+            
+            pvzWave = 1;
+            pvzGameActive = true;
+            pvzZombies = [];
+            pvzProjectiles = [];
+            pvzZombiesToSpawn = 0;
+            pvzSelectedPlant = null;
+            
+            document.getElementById('pvz-start-btn').style.display = 'block';
+            document.getElementById('pvz-start-btn').innerText = "🚀 WAVE 1 BAŞLAT";
+            document.getElementById('pvz-market-container').style.display = 'none';
+            document.getElementById('pvz-market-toggle').style.display = 'block';
+            updatePvzUI();
+
+            // 5 satır 8 sütunluk bahçe (Her biri 100x100 px)
+            pvzGrid = [];
+            for (let r = 0; r < 5; r++) {
+                pvzGrid[r] = [];
+                for (let c = 0; c < 8; c++) {
+                    pvzGrid[r][c] = null;
                 }
             }
 
-            let placed = 0;
-            while(placed < minesCount) {
-                let r = Math.floor(Math.random() * minesRows);
-                let c = Math.floor(Math.random() * minesCols);
-                if(!minesBoard[r][c].isMine) {
-                    minesBoard[r][c].isMine = true;
-                    placed++;
+            pvzCanvas.addEventListener('mousedown', pvzClick);
+            pvzCanvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                let touch = e.touches[0];
+                let mouseEvent = new MouseEvent("mousedown", { clientX: touch.clientX, clientY: touch.clientY });
+                pvzCanvas.dispatchEvent(mouseEvent);
+            }, { passive: false });
+
+            if (pvzAnimId) cancelAnimationFrame(pvzAnimId);
+            pvzLastTime = performance.now();
+            requestAnimationFrame(pvzLoop);
+        }
+
+        function togglePvzMarket() {
+            const m = document.getElementById('pvz-market-container');
+            m.style.display = m.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        function pvzSelectPlant(type) {
+            pvzSelectedPlant = type;
+            document.querySelectorAll('.pvz-market-btn').forEach(btn => btn.classList.remove('active-tool'));
+            document.getElementById('btn-pvz-' + type).classList.add('active-tool');
+        }
+
+        function pvzClick(e) {
+            if (pvzState !== 'market') return;
+            const rect = pvzCanvas.getBoundingClientRect();
+            const scaleX = pvzCanvas.width / rect.width;
+            const scaleY = pvzCanvas.height / rect.height;
+            let x = (e.clientX - rect.left) * scaleX;
+            let y = (e.clientY - rect.top) * scaleY;
+
+            let col = Math.floor(x / 100);
+            let row = Math.floor(y / 100);
+
+            if (col >= 0 && col < 8 && row >= 0 && row < 5) {
+                if (pvzSelectedPlant) {
+                    let cost = pvzData[pvzSelectedPlant].cost;
+                    if (pvzCoins >= cost && !pvzGrid[row][col]) {
+                        pvzCoins -= cost;
+                        pvzGrid[row][col] = { type: pvzSelectedPlant, timer: 0 };
+                        updatePvzUI();
+                    }
                 }
             }
+        }
 
-            for(let r = 0; r < minesRows; r++) {
-                for(let c = 0; c < minesCols; c++) {
-                    if(!minesBoard[r][c].isMine) {
-                        let count = 0;
-                        for(let i = -1; i <= 1; i++) {
-                            for(let j = -1; j <= 1; j++) {
-                                if(r+i >= 0 && r+i < minesRows && c+j >= 0 && c+j < minesCols && minesBoard[r+i][c+j].isMine) count++;
+        function pvzStartWave() {
+            if (pvzState !== 'market') return;
+            pvzState = 'playing';
+            pvzZombiesToSpawn = 3 + pvzWave * 2; // Her wave zombi sayısı artar
+            pvzSpawnTimer = 0;
+            
+            document.getElementById('pvz-start-btn').style.display = 'none';
+            document.getElementById('pvz-market-container').style.display = 'none';
+            document.getElementById('pvz-market-toggle').style.display = 'none'; // Dalga esnasında market kapalı
+            updatePvzUI();
+        }
+
+        function updatePvzUI() {
+            document.getElementById('pvz-coins-display').innerText = pvzCoins;
+            document.getElementById('pvz-wave-display').innerText = pvzWave;
+        }
+
+        function pvzLoop(timestamp) {
+            if (!pvzGameActive) return;
+            let dt = timestamp - pvzLastTime;
+            pvzLastTime = timestamp;
+
+            pvzCtx.clearRect(0, 0, pvzCanvas.width, pvzCanvas.height);
+
+            // Arka Plan Çizimi (Evin Bahçesi)
+            for (let r = 0; r < 5; r++) {
+                for (let c = 0; c < 8; c++) {
+                    pvzCtx.fillStyle = (r + c) % 2 === 0 ? '#4ade80' : '#22c55e'; // Çim Rengi
+                    pvzCtx.fillRect(c * 100, r * 100, 100, 100);
+                }
+            }
+            // Ev sınırı
+            pvzCtx.fillStyle = '#78350f';
+            pvzCtx.fillRect(0, 0, 15, 500);
+
+            // Bitkileri ve Saldırı Mekaniğini Güncelle
+            for (let r = 0; r < 5; r++) {
+                for (let c = 0; c < 8; c++) {
+                    let p = pvzGrid[r][c];
+                    if (p) {
+                        pvzCtx.font = "55px Arial";
+                        pvzCtx.textAlign = "center";
+                        pvzCtx.textBaseline = "middle";
+                        pvzCtx.fillText(pvzData[p.type].emoji, c * 100 + 50, r * 100 + 50);
+
+                        if (pvzState === 'playing') {
+                            p.timer += dt;
+                            // Her 5 saniyede bir hayvan fırlat
+                            if (p.timer >= 5000) { 
+                                p.timer = 0;
+                                pvzProjectiles.push({
+                                    emoji: pvzData[p.type].emoji,
+                                    dmg: pvzData[p.type].dmg,
+                                    x: c * 100 + 60,
+                                    y: r * 100 + 50,
+                                    row: r,
+                                    speed: 0.25 // Mermi Hızı
+                                });
                             }
                         }
-                        minesBoard[r][c].neighborCount = count;
                     }
                 }
             }
+
+            if (pvzState === 'playing') {
+                // Zombi Doğurma
+                if (pvzZombiesToSpawn > 0) {
+                    pvzSpawnTimer += dt;
+                    if (pvzSpawnTimer > 2500) { // 2.5 Saniyede bir zombi gelir
+                        let r = Math.floor(Math.random() * 5);
+                        let maxHp = 10 + (pvzWave - 1) * 5; // Her wave canları artar
+                        let hiz = 0.025 + (pvzWave * 0.002); // Her wave hızlanır
+                        
+                        pvzZombies.push({
+                            row: r, x: 800, y: r * 100 + 50,
+                            hp: maxHp, maxHp: maxHp, speed: hiz, eatTimer: 0
+                        });
+                        pvzZombiesToSpawn--;
+                        pvzSpawnTimer = 0;
+                    }
+                }
+
+                // Hayvanlar (Mermiler)
+                for (let i = pvzProjectiles.length - 1; i >= 0; i--) {
+                    let proj = pvzProjectiles[i];
+                    proj.x += proj.speed * dt;
+                    
+                    pvzCtx.font = "30px Arial";
+                    pvzCtx.fillText(proj.emoji, proj.x, proj.y);
+
+                    if (proj.x > 850) { pvzProjectiles.splice(i, 1); continue; }
+
+                    // Zombi ile Çarpışma Kontrolü 
+                    let isHit = false;
+                    for (let j = 0; j < pvzZombies.length; j++) {
+                        let z = pvzZombies[j];
+                        if (z.row === proj.row && Math.abs(z.x - proj.x) < 40) {
+                            isHit = true;
+                            break;
+                        }
+                    }
+                    
+                    if (isHit) {
+                        for (let j = 0; j < pvzZombies.length; j++) {
+                            let z = pvzZombies[j];
+                            if (z.row === proj.row && z.x >= proj.x - 40) {
+                                z.hp -= proj.dmg;
+                            }
+                        }
+                        pvzProjectiles.splice(i, 1);
+                        continue;
+                    }
+                }
+
+                // Zombiler
+                for (let i = pvzZombies.length - 1; i >= 0; i--) {
+                    let z = pvzZombies[i];
+                    
+                    if (z.hp <= 0) {
+                        pvzZombies.splice(i, 1);
+                        pvzCoins += 5; // Ölen zombiden 5 coin
+                        updatePvzUI();
+                        continue;
+                    }
+
+                    // Bitki yeme / Parçalama durumu
+                    let c = Math.floor((z.x - 30) / 100);
+                    if (c >= 0 && c < 8 && pvzGrid[z.row][c]) {
+                        z.eatTimer += dt;
+                        if (z.eatTimer > 1000) { 
+                            pvzGrid[z.row][c] = null;
+                            z.eatTimer = 0;
+                        }
+                    } else {
+                        z.x -= z.speed * dt;
+                    }
+
+                    // Oyunu Kaybetme Şartı
+                    if (z.x < 15) {
+                        alert("ZOMBİLER EVİNE GİRDİ! 🧠💥\nUlaştığın Wave: " + pvzWave);
+                        initPvz(); // Oyunu Sıfırla
+                        return;
+                    }
+
+                    pvzCtx.font = "55px Arial";
+                    pvzCtx.fillText('🧟', z.x, z.y);
+                    
+                    // Can Barı Çizimi
+                    pvzCtx.fillStyle = 'red';
+                    pvzCtx.fillRect(z.x - 25, z.y - 40, 50, 6);
+                    pvzCtx.fillStyle = 'green';
+                    pvzCtx.fillRect(z.x - 25, z.y - 40, 50 * (z.hp / z.maxHp), 6);
+                }
+
+                // Dalga Bitiş Kontrolü
+                if (pvzZombiesToSpawn === 0 && pvzZombies.length === 0) {
+                    pvzState = 'market';
+                    pvzWave++;
+                    pvzProjectiles = []; 
+                    updatePvzUI();
+                    
+                    document.getElementById('pvz-start-btn').style.display = 'block';
+                    document.getElementById('pvz-start-btn').innerText = `🚀 WAVE ${pvzWave} BAŞLAT`;
+                    document.getElementById('pvz-market-toggle').style.display = 'block'; 
+                    confetti({particleCount: 100, spread: 70, origin: { y: 0.6 }});
+                }
+            }
+
+            pvzAnimId = requestAnimationFrame(pvzLoop);
+        }
+        // =======================================================
+
+
+        // --- DİĞER FONKSİYONLAR (ÖZGÜRCE ÇİZİM) ---
+        const fdCanvas = document.getElementById('freeCanvas');
+        const fdCtx = fdCanvas.getContext('2d', { willReadFrequently: true });
+        let isFdDrawing = false; let fdCurrentTool = 'brush'; let isFdInitialized = false;
+
+        function initFreeCanvas() {
+            if(!isFdInitialized) { fdCtx.fillStyle = "#ffffff"; fdCtx.fillRect(0, 0, fdCanvas.width, fdCanvas.height); isFdInitialized = true; }
+        }
+        function setFdTool(tool) { fdCurrentTool = tool; document.querySelectorAll('.freedraw-toolbar .fd-btn-tool').forEach(btn => btn.classList.remove('active-tool')); document.getElementById('btn-fd-' + tool).classList.add('active-tool'); }
+        function setFdColor(hexColor) { document.getElementById('fdColor').value = hexColor; }
+        function clearFreeCanvas() { if(confirm("Tüm çizimi silmek istediğinize emin misiniz?")) { fdCtx.fillStyle = "#ffffff"; fdCtx.fillRect(0, 0, fdCanvas.width, fdCanvas.height); } }
+        function getFdPos(e) {
+            const rect = fdCanvas.getBoundingClientRect(); const scaleX = fdCanvas.width / rect.width; const scaleY = fdCanvas.height / rect.height;
+            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: Math.floor((clientX - rect.left) * scaleX), y: Math.floor((clientY - rect.top) * scaleY) };
         }
 
-        function minesAc(r, c) {
-            if(!minesGameActive || minesBoard[r][c].isRevealed || minesBoard[r][c].isFlagged) return;
-            minesBoard[r][c].isRevealed = true;
-            let cell = document.getElementById(`cell-${r}-${c}`);
-            cell.classList.add('revealed');
+        fdCanvas.addEventListener('mousedown', fdStart); fdCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); fdStart(e); }, { passive: false });
+        fdCanvas.addEventListener('mouseup', fdEnd); fdCanvas.addEventListener('touchend', fdEnd); fdCanvas.addEventListener('mouseleave', fdEnd);
+        fdCanvas.addEventListener('mousemove', fdMove); fdCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); fdMove(e); }, { passive: false });
 
-            if(minesBoard[r][c].isMine) {
-                if (!opModAktif) {
-                    cell.innerText = '💣';
-                    cell.classList.add('mine');
-                    minesOyunBitti(false);
-                    return;
-                } else {
-                    cell.innerText = '💥';
-                    setTimeout(() => { cell.innerText = ''; cell.classList.remove('revealed'); minesBoard[r][c].isRevealed = false; }, 500);
-                    return;
+        function fdStart(e) {
+            const pos = getFdPos(e);
+            if (fdCurrentTool === 'fill') { floodFill(pos.x, pos.y, document.getElementById('fdColor').value); return; }
+            isFdDrawing = true; fdCtx.beginPath(); fdCtx.moveTo(pos.x, pos.y);
+        }
+        function fdEnd() { if (isFdDrawing) { isFdDrawing = false; fdCtx.beginPath(); } }
+        function fdMove(e) {
+            if (!isFdDrawing) return;
+            const pos = getFdPos(e);
+            fdCtx.lineWidth = document.getElementById('fdSize').value;
+            fdCtx.lineCap = document.getElementById('fdShape').value === 'round' ? 'round' : 'square';
+            fdCtx.lineJoin = document.getElementById('fdShape').value === 'round' ? 'round' : 'miter';
+            fdCtx.strokeStyle = fdCurrentTool === 'eraser' ? '#ffffff' : document.getElementById('fdColor').value;
+            fdCtx.lineTo(pos.x, pos.y); fdCtx.stroke(); fdCtx.beginPath(); fdCtx.moveTo(pos.x, pos.y);
+        }
+
+        function hexToRgb(hex) { let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 0, g: 0, b: 0 }; }
+        function matchColor(data, pos, r, g, b, a) { return data[pos] === r && data[pos + 1] === g && data[pos + 2] === b && data[pos + 3] === a; }
+        function floodFill(startX, startY, fillColorHex) {
+            const imgData = fdCtx.getImageData(0, 0, fdCanvas.width, fdCanvas.height); const data = imgData.data;
+            const targetColor = hexToRgb(fillColorHex);
+            const startPos = (startY * fdCanvas.width + startX) * 4;
+            const startR = data[startPos], startG = data[startPos + 1], startB = data[startPos + 2], startA = data[startPos + 3];
+            if (startR === targetColor.r && startG === targetColor.g && startB === targetColor.b && startA === 255) return; 
+
+            const stack = [[startX, startY]];
+            while (stack.length > 0) {
+                const [x, y] = stack.pop(); let pos = (y * fdCanvas.width + x) * 4; let currentY = y;
+                while (currentY >= 0 && matchColor(data, pos, startR, startG, startB, startA)) { currentY--; pos -= fdCanvas.width * 4; }
+                pos += fdCanvas.width * 4; currentY++;
+                let reachLeft = false, reachRight = false;
+                while (currentY < fdCanvas.height && matchColor(data, pos, startR, startG, startB, startA)) {
+                    data[pos] = targetColor.r; data[pos + 1] = targetColor.g; data[pos + 2] = targetColor.b; data[pos + 3] = 255;
+                    if (x > 0) { if (matchColor(data, pos - 4, startR, startG, startB, startA)) { if (!reachLeft) { stack.push([x - 1, currentY]); reachLeft = true; } } else if (reachLeft) reachLeft = false; }
+                    if (x < fdCanvas.width - 1) { if (matchColor(data, pos + 4, startR, startG, startB, startA)) { if (!reachRight) { stack.push([x + 1, currentY]); reachRight = true; } } else if (reachRight) reachRight = false; }
+                    currentY++; pos += fdCanvas.width * 4;
                 }
             }
+            fdCtx.putImageData(imgData, 0, 0);
+        }
 
-            if(minesBoard[r][c].neighborCount > 0) {
-                cell.innerText = minesBoard[r][c].neighborCount;
-                let colors = ['#3b82f6', '#22c55e', '#ef4444', '#8b5cf6', '#f59e0b', '#06b6d4', '#d946ef', '#f43f5e'];
-                cell.style.color = colors[minesBoard[r][c].neighborCount - 1];
-            } else {
-                for(let i = -1; i <= 1; i++) {
-                    for(let j = -1; j <= 1; j++) {
-                        if(r+i >= 0 && r+i < minesRows && c+j >= 0 && c+j < minesCols) minesAc(r+i, c+j);
-                    }
+        // --- HAFIZA KARTLARI OYUNU ---
+        const memoryEmojis = ['🦁', '🐸', '🦄', '🐷', '🦊', '🐼', '🐯', '🐮'];
+        let hasFlippedCard = false; let lockBoard = false; let firstCard, secondCard; let memoryScore = 0;
+        function hafizaOyunuBaslat() {
+            const grid = document.getElementById('memory-grid-container'); grid.innerHTML = '';
+            memoryScore = 0; document.getElementById('memory-score').innerText = memoryScore;
+            hasFlippedCard = false; lockBoard = false; firstCard = null; secondCard = null;
+            let cardArray = [...memoryEmojis, ...memoryEmojis];
+            cardArray.sort(() => 0.5 - Math.random());
+            cardArray.forEach(emoji => {
+                const card = document.createElement('div'); card.classList.add('memory-card'); card.dataset.emoji = emoji;
+                card.innerHTML = `<div class="card-face card-down">❓</div><div class="card-face card-up">${emoji}</div>`;
+                card.addEventListener('click', kartCevir); grid.appendChild(card);
+            });
+            // Hile Aktifse Kartları Şeffaf Göster
+            opKartlariGoster(opModAktif);
+        }
+        function kartCevir() {
+            if (lockBoard) return; if (this === firstCard) return;
+            this.classList.add('flipped');
+            if (!hasFlippedCard) { hasFlippedCard = true; firstCard = this; return; }
+            secondCard = this; eslesmeKontrol();
+        }
+        function eslesmeKontrol() {
+            if (firstCard.dataset.emoji === secondCard.dataset.emoji) { kartlariDevreDisiBirak(); } else { kartlariKapat(); }
+        }
+        function kartlariDevreDisiBirak() {
+            firstCard.removeEventListener('click', kartCevir); secondCard.removeEventListener('click', kartCevir);
+            memoryScore++; document.getElementById('memory-score').innerText = memoryScore;
+            confetti({particleCount: 40, spread: 50, origin: { y: 0.7 }});
+            if (memoryScore === memoryEmojis.length) { setTimeout(() => { confetti({particleCount: 250, spread: 100}); alert("Harika! Tüm kartları başarıyla eşleştirdin!"); }, 500); }
+            tahtayiSifirla();
+        }
+        function kartlariKapat() { lockBoard = true; setTimeout(() => { firstCard.classList.remove('flipped'); secondCard.classList.remove('flipped'); tahtayiSifirla(); }, 1000); }
+        function tahtayiSifirla() { [hasFlippedCard, lockBoard] = [false, false]; [firstCard, secondCard] = [null, null]; }
+
+        // --- TAVŞAN YAKALAMA ---
+        let tavsanSkor = 0; let tavsanSuresi = 30; let tavsanZamanlayici; let moleZamanlayici; let sonDelik;
+        function tavsanOyunuBaslat() {
+            tavsanSkor = 0; tavsanSuresi = 30; document.getElementById('rabbit-score').innerText = tavsanSkor; document.getElementById('rabbit-timer').innerText = tavsanSuresi;
+            clearInterval(tavsanZamanlayici); clearTimeout(moleZamanlayici);
+            tavsanZamanlayici = setInterval(() => {
+                tavsanSuresi--; document.getElementById('rabbit-timer').innerText = tavsanSuresi;
+                if(tavsanSuresi <= 0) { tavsanOyunuBitir(); alert("Oyun Bitti! Toplam Skorun: " + tavsanSkor); gecSayfa('survey-page'); }
+            }, 1000);
+            tavsanFirla();
+        }
+        function rastgeleDelik() {
+            const delikler = document.querySelectorAll('.delik'); const idx = Math.floor(Math.random() * delikler.length);
+            if (idx === sonDelik) return rastgeleDelik(); sonDelik = idx; return delikler[idx];
+        }
+        function tavsanFirla() {
+            if (tavsanSuresi <= 0) return; const delik = rastgeleDelik(); delik.classList.add('aktif');
+            // Hile Kontrolü
+            let kalmaSuresi = (!opModAktif && tavsanSkor > 300) ? Math.random() * 300 + 300 : Math.random() * 600 + 600; 
+            moleZamanlayici = setTimeout(() => { delik.classList.remove('aktif'); tavsanFirla(); }, kalmaSuresi);
+        }
+        function tavsanVur(index) {
+            const delik = document.getElementById('hole-' + index); if(!delik.classList.contains('aktif')) return;
+            tavsanSkor += 10; document.getElementById('rabbit-score').innerText = tavsanSkor;
+            tavsanSuresi += 10; document.getElementById('rabbit-timer').innerText = tavsanSuresi;
+            delik.classList.remove('aktif');
+            const bom = delik.querySelector('.bom-efekt'); bom.style.display = 'block'; setTimeout(() => { bom.style.display = 'none'; }, 400);
+            confetti({particleCount: 10, origin: { y: 0.6 }});
+        }
+        function tavsanOyunuBitir() { clearInterval(tavsanZamanlayici); clearTimeout(moleZamanlayici); document.querySelectorAll('.delik').forEach(d => d.classList.remove('aktif')); }
+
+        // --- AI ÇİZİM ---
+        const canvas = document.getElementById('paintCanvas'); const ctx = canvas.getContext('2d');
+        let drawing = false; let sure = 60; let zamanlayici;
+        const gorevlerKolay = ["Mandalina", "Çubuk Adam", "Güneş", "Kare", "Daire"]; const gorevlerOrta = ["Ev", "Gözlük", "Ağaç", "Yıldız", "Bulut"]; const gorevlerZor = ["Dağ", "Bisiklet", "Araba", "Kedi", "Gemi", "Telefon"];
+        let cizimSkor = 0; let aktifGorev = "";
+        ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a';
+        function setRenk(yeniRenk, eleman) { ctx.strokeStyle = yeniRenk; document.querySelectorAll('.color-palette .color-box').forEach(box => box.classList.remove('selected')); eleman.classList.add('selected'); }
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect(); const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
+            let clientX = e.touches ? e.touches[0].clientX : e.clientX; let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+        }
+        canvas.addEventListener('mousedown', (e) => { drawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); });
+        canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchstart', (e) => { drawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }, { passive: false });
+        canvas.addEventListener('touchend', () => { drawing = false; ctx.beginPath(); });
+        canvas.addEventListener('touchmove', (e) => { draw(e); e.preventDefault(); }, { passive: false });
+        function draw(e) { if (!drawing) return; const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); }
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+        function aiKonus(metin) { if ('speechSynthesis' in window) { const speech = new SpeechSynthesisUtterance(metin); speech.lang = 'tr-TR'; window.speechSynthesis.speak(speech); } }
+        function oyunBaslat() {
+            clearCanvas(); document.getElementById('error-screen').style.display = 'none';
+            let secimHavuzu = cizimSkor >= 4 ? gorevlerZor : (cizimSkor >= 2 ? gorevlerOrta : gorevlerKolay);
+            aktifGorev = secimHavuzu[Math.floor(Math.random() * secimHavuzu.length)]; document.getElementById('ai-task').innerText = aktifGorev;
+            setTimeout(() => { aiKonus("Lütfen ekrana bir " + aktifGorev + " çiziniz."); }, 300);
+            sure = 60; document.getElementById('timer').innerText = sure; clearInterval(zamanlayici);
+            zamanlayici = setInterval(() => { sure--; document.getElementById('timer').innerText = sure; if(sure <= 0) { clearInterval(zamanlayici); aiTarama(); } }, 1000);
+        }
+        function oynaBitir() { clearInterval(zamanlayici); }
+        function aiTarama() {
+            clearInterval(zamanlayici);
+            // Hile Kontrolü
+            if (opModAktif || Math.random() > 0.45) { aiKonus("Harika! Bu bir " + aktifGorev); confetti({particleCount: 100, spread: 60}); alert("Yapay zeka bildi: " + aktifGorev); cizimSkor++; oyunBaslat();
+            } else { aiKonus("Maalesef benzetemedim."); document.getElementById('error-screen').style.display = 'flex'; }
+        }
+        function yenidenDene() { oyunBaslat(); }
+
+        // --- GEOMETRY DASH ---
+        const gdCanvas = document.getElementById('gdCanvas'); const gdCtx = gdCanvas.getContext('2d'); let gdAnimId;
+        let gdPlayer, gdObstacles, gdGameSpeed, gdDistance, gdActive, gdTotalLength;
+        function gdOyunuBaslat() {
+            gdActive = true; gdGameSpeed = 3.2; gdDistance = 0; gdTotalLength = 2500; gdObstacles = [];
+            gdPlayer = { x: 50, y: 140, size: 25, vy: 0, gravity: 0.6, jumpForce: -8.5, isGrounded: true, angle: 0 };
+            const haritaPlanı = [400, 650, 900, 1150, 1350, 1600, 1800, 2050, 2200];
+            haritaPlanı.forEach((posX, i) => { gdObstacles.push({ x: posX, type: (i % 3 === 0) ? 1 : ((i % 3 === 1) ? 2 : 3), width: 20, height: 25, passed: false }); });
+            window.removeEventListener('keydown', gdZiplamaKlavye); gdCanvas.removeEventListener('touchstart', gdZiplamaDokunma);
+            window.addEventListener('keydown', gdZiplamaKlavye); gdCanvas.addEventListener('touchstart', gdZiplamaDokunma, { passive: false });
+            if(gdAnimId) cancelAnimationFrame(gdAnimId); gdDongu();
+        }
+        function gdZiplamaKlavye(e) { if(e.code === 'Space' || e.code === 'ArrowUp') gdZıpla(); }
+        function gdZiplamaDokunma(e) { gdZıpla(); e.preventDefault(); }
+        function gdZıpla() { if(gdPlayer.isGrounded && gdActive) { gdPlayer.vy = gdPlayer.jumpForce; gdPlayer.isGrounded = false; } }
+        function gdDongu() {
+            if (!gdActive) return; gdCtx.clearRect(0, 0, gdCanvas.width, gdCanvas.height);
+            gdCtx.strokeStyle = '#3b82f6'; gdCtx.lineWidth = 3; gdCtx.beginPath(); gdCtx.moveTo(0, 165); gdCtx.lineTo(gdCanvas.width, 165); gdCtx.stroke();
+            gdDistance += gdGameSpeed; let yuzde = Math.min(Math.floor((gdDistance / gdTotalLength) * 100), 100); document.getElementById('gd-progress').innerText = yuzde + "%";
+            gdPlayer.vy += gdPlayer.gravity; gdPlayer.y += gdPlayer.vy;
+            if (gdPlayer.y >= 140) { gdPlayer.y = 140; gdPlayer.vy = 0; gdPlayer.isGrounded = true; gdPlayer.angle = Math.round(gdPlayer.angle / 90) * 90; } else { gdPlayer.angle += 3.5; }
+            gdCtx.save(); gdCtx.translate(gdPlayer.x + gdPlayer.size/2, gdPlayer.y + gdPlayer.size/2); gdCtx.rotate((gdPlayer.angle * Math.PI) / 180);
+            gdCtx.fillStyle = '#00ff88'; gdCtx.fillRect(-gdPlayer.size/2, -gdPlayer.size/2, gdPlayer.size, gdPlayer.size); gdCtx.strokeStyle = '#ffffff'; gdCtx.lineWidth = 2; gdCtx.strokeRect(-gdPlayer.size/2, -gdPlayer.size/2, gdPlayer.size, gdPlayer.size);
+            gdCtx.fillStyle = '#0f172a'; gdCtx.fillRect(2, -8, 6, 6); gdCtx.fillRect(2, 2, 6, 6); gdCtx.restore();
+            for (let i = 0; i < gdObstacles.length; i++) {
+                let obs = gdObstacles[i]; obs.x -= gdGameSpeed;
+                gdCtx.fillStyle = '#ef4444'; gdCtx.beginPath();
+                if (obs.type === 1) { gdCtx.moveTo(obs.x, 165); gdCtx.lineTo(obs.x + 10, 165 - obs.height); gdCtx.lineTo(obs.x + 20, 165);
+                } else if (obs.type === 2) { gdCtx.moveTo(obs.x, 165); gdCtx.lineTo(obs.x + 8, 165 - obs.height); gdCtx.lineTo(obs.x + 16, 165); gdCtx.moveTo(obs.x + 14, 165); gdCtx.lineTo(obs.x + 22, 165 - obs.height); gdCtx.lineTo(obs.x + 30, 165);
+                } else { gdCtx.fillRect(obs.x, 165 - obs.height, obs.width, obs.height); gdCtx.strokeStyle = '#fff'; gdCtx.strokeRect(obs.x, 165 - obs.height, obs.width, obs.height); }
+                gdCtx.fill();
+                let engelSol = obs.x, engelSag = obs.x + (obs.type === 2 ? 30 : obs.width), engelUst = 165 - obs.height;
+                
+                // Hile Kontrolü: opModAktif değilse çarpışma algıla
+                if (!opModAktif && gdPlayer.x + gdPlayer.size > engelSol + 4 && gdPlayer.x < engelSag - 4 && gdPlayer.y + gdPlayer.size > engelUst + 2) {
+                    gdActive = false;
+                    let mevcutHigh = parseInt(localStorage.getItem('gd_highscore') || 0);
+                    if(yuzde > mevcutHigh) { localStorage.setItem('gd_highscore', yuzde); document.getElementById('gd-highscore').innerText = yuzde + "%"; }
+                    alert("💥 Patladın! İlerleme derecen: " + yuzde + "%"); gdOyunuBaslat(); return;
                 }
+            }
+            if (yuzde >= 100) {
+                gdActive = false; confetti({particleCount: 150, spread: 80}); localStorage.setItem('gd_highscore', 100); document.getElementById('gd-highscore').innerText = "100%";
+                alert("🏆 TEBRİKLER! Stereo Madness 1. Bölümü Tamamladın!"); gecSayfa('survey-page'); return;
+            }
+            gdAnimId = requestAnimationFrame(gdDongu);
+        }
+        function gdOyunuBitir() { gdActive = false; if(gdAnimId) cancelAnimationFrame(gdAnimId); window.removeEventListener('keydown', gdZiplamaKlavye); }
+
+        // --- MAYIN TARLASI ---
+        const minesRows = 8; const minesCols = 8; const totalMines = 10; let minesBoard = []; let minesLeft = totalMines; let minesGameActive = true;
+        function minesOyunuBaslat() {
+            minesGameActive = true; minesLeft = totalMines; document.getElementById('mines-count').innerText = minesLeft;
+            document.getElementById('mines-status').innerText = "Devam Ediyor"; document.getElementById('mines-status').style.color = "#3b82f6";
+            const grid = document.getElementById('mines-grid'); grid.innerHTML = ''; minesBoard = [];
+            for (let r = 0; r < minesRows; r++) { minesBoard[r] = []; for (let c = 0; c < minesCols; c++) { minesBoard[r][c] = { r: r, c: c, isMine: false, isRevealed: false, isFlagged: false, count: 0 }; } }
+            let minesPlaced = 0; while (minesPlaced < totalMines) { let r = Math.floor(Math.random() * minesRows); let c = Math.floor(Math.random() * minesCols); if (!minesBoard[r][c].isMine) { minesBoard[r][c].isMine = true; minesPlaced++; } }
+            for (let r = 0; r < minesRows; r++) { for (let c = 0; c < minesCols; c++) { if (minesBoard[r][c].isMine) continue; let count = 0; for (let dr = -1; dr <= 1; dr++) { for (let dc = -1; dc <= 1; dc++) { if (minesBoard[r + dr] && minesBoard[r + dr][c + dc] && minesBoard[r + dr][c + dc].isMine) { count++; } } } minesBoard[r][c].count = count; } }
+            for (let r = 0; r < minesRows; r++) { for (let c = 0; c < minesCols; c++) {
+                const cellEl = document.createElement('div'); cellEl.classList.add('mine-cell'); cellEl.id = `cell-${r}-${c}`;
+                cellEl.addEventListener('click', () => cellClick(r, c)); cellEl.addEventListener('contextmenu', (e) => { e.preventDefault(); cellFlag(r, c); }); grid.appendChild(cellEl);
+            } }
+            // Hile Aktifse Mayınları Kırmızı İle Göster
+            opMayinlariGoster(opModAktif);
+        }
+
+        function cellClick(r, c) {
+            if (!minesGameActive) return; let cell = minesBoard[r][c]; if (cell.isRevealed || cell.isFlagged) return;
+            cell.isRevealed = true; const cellEl = document.getElementById(`cell-${r}-${c}`); cellEl.classList.add('revealed');
+            // Görünen mayının gölgesini kapat ki orijinali bozmasın
+            cellEl.style.boxShadow = "none";
+            cellEl.style.border = "1px solid rgba(255,255,255,0.05)";
+            
+            if (cell.isMine) { 
+                cellEl.classList.add('mine'); 
+                cellEl.innerText = "💣"; 
+                minesOyunBitti(false); 
+                return; 
+            }
+            if (cell.count > 0) { 
+                cellEl.innerText = cell.count; 
+                let colors = ["", "#3b82f6", "#22c55e", "#ef4444", "#8b5cf6", "#f59e0b", "#06b6d4", "#000", "#555"]; 
+                cellEl.style.color = colors[cell.count]; 
+            } else { 
+                for (let dr = -1; dr <= 1; dr++) { 
+                    for (let dc = -1; dc <= 1; dc++) { 
+                        if (minesBoard[r + dr] && minesBoard[r + dr][c + dc] && !(dr === 0 && dc === 0)) cellClick(r + dr, c + dc); 
+                    } 
+                } 
             }
             minesKazanmaKontrol();
         }
 
-        function minesBayrak(r, c) {
-            if(!minesGameActive || minesBoard[r][c].isRevealed) return;
-            minesBoard[r][c].isFlagged = !minesBoard[r][c].isFlagged;
-            let cell = document.getElementById(`cell-${r}-${c}`);
-            cell.innerText = minesBoard[r][c].isFlagged ? '🚩' : '';
-            minesRemaining += minesBoard[r][c].isFlagged ? -1 : 1;
-            document.getElementById('mines-count').innerText = minesRemaining;
+        function cellFlag(r, c) {
+            if (!minesGameActive) return; let cell = minesBoard[r][c]; if (cell.isRevealed) return;
+            const cellEl = document.getElementById(`cell-${r}-${c}`);
+            if (!cell.isFlagged) { 
+                if (minesLeft > 0) { cell.isFlagged = true; cellEl.innerText = "🚩"; minesLeft--; } 
+            } else { 
+                cell.isFlagged = false; cellEl.innerText = ""; minesLeft++; 
+            }
+            document.getElementById('mines-count').innerText = minesLeft;
+            minesKazanmaKontrol();
         }
 
         function minesKazanmaKontrol() {
-            let revealedCount = 0;
-            for(let r = 0; r < minesRows; r++) {
-                for(let c = 0; c < minesCols; c++) {
-                    if(minesBoard[r][c].isRevealed) revealedCount++;
-                }
+            let revealedCount = 0; let correctFlags = 0;
+            for (let r = 0; r < minesRows; r++) { 
+                for (let c = 0; c < minesCols; c++) { 
+                    if (minesBoard[r][c].isRevealed) revealedCount++; 
+                    if (minesBoard[r][c].isMine && minesBoard[r][c].isFlagged) correctFlags++; 
+                } 
             }
-            if(revealedCount === minesRows * minesCols - minesCount) {
+            if (revealedCount === (minesRows * minesCols) - totalMines || correctFlags === totalMines) {
                 minesOyunBitti(true);
             }
         }
 
         function minesOyunBitti(kazandi) {
             minesGameActive = false;
-            let status = document.getElementById('mines-status');
-            if(kazandi) {
-                status.innerText = "KAZANDIN!";
-                confetti({particleCount: 150, spread: 80});
-            } else {
-                status.innerText = "KAYBETTİN!";
-                status.style.color = "#ef4444";
-                for(let r = 0; r < minesRows; r++) {
-                    for(let c = 0; c < minesCols; c++) {
-                        if(minesBoard[r][c].isMine) {
-                            let cell = document.getElementById(`cell-${r}-${c}`);
-                            cell.innerText = '💣';
-                            if(!minesBoard[r][c].isRevealed) cell.classList.add('revealed');
-                        }
+            for (let r = 0; r < minesRows; r++) { 
+                for (let c = 0; c < minesCols; c++) {
+                    let cell = minesBoard[r][c]; 
+                    const cellEl = document.getElementById(`cell-${r}-${c}`);
+                    if (cell.isMine && !kazandi) { 
+                        cellEl.classList.add('mine'); cellEl.innerText = "💣"; 
+                    } else if (cell.isMine && kazandi) { 
+                        cellEl.innerText = "🚩"; cellEl.style.background = "#22c55e"; 
                     }
-                }
+                } 
+            }
+            if (kazandi) { 
+                document.getElementById('mines-status').innerText = "KAZANDIN! 🎉"; 
+                document.getElementById('mines-status').style.color = "#22c55e"; 
+                confetti({particleCount: 150, spread: 80}); 
+            } else { 
+                document.getElementById('mines-status').innerText = "KAYBETTİN! 💥"; 
+                document.getElementById('mines-status').style.color = "#ef4444"; 
             }
         }
+
         function minesOyunuBitir() { minesGameActive = false; }
     </script>
 </body>
