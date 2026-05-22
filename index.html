@@ -82,10 +82,11 @@
         .card-down { background: #334155; border: 2px solid #475569; color: #cbd5e1; font-size: 24px; }
         .card-up { background: #1e293b; border: 2px solid #3b82f6; transform: rotateY(180deg); }
 
-        /* GEOMETRY DASH, PACMAN VE MAZE STİLLERİ */
+        /* GEOMETRY DASH, PACMAN, MAZE, SNAKE STİLLERİ */
         #gdCanvas { background: linear-gradient(to bottom, #1d4ed8, #1e1b4b); border-radius: 15px; border: 3px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); display: block; margin: 15px 0; touch-action: none; width: 100%; max-width: 400px; height: auto;}
         #pacCanvas { background: #000; border-radius: 10px; border: 3px solid #eab308; box-shadow: 0 0 20px rgba(234, 179, 8, 0.4); display: block; margin: 15px auto; touch-action: none; width: 100%; max-width: 300px; }
         #mazeCanvas { background: #0f172a; border-radius: 10px; border: 3px solid #dc2626; box-shadow: 0 0 20px rgba(220, 38, 38, 0.4); display: block; margin: 15px auto; touch-action: none; width: 100%; max-width: 300px; }
+        #snakeCanvas { background: #0f172a; border-radius: 10px; border: 3px solid #14b8a6; box-shadow: 0 0 20px rgba(20, 184, 166, 0.4); display: block; margin: 15px auto; touch-action: none; width: 100%; max-width: 320px; aspect-ratio: 1/1; }
         .gd-tip { font-size: 13px; color: #94a3b8; margin-top: 5px; }
 
         /* MAYIN TARLASI STİLLERİ */
@@ -150,12 +151,24 @@
             <button class="btn-game" style="background:#22c55e;" onclick="gecSayfa('pvz-page')">🌻 HAYVANLAR VS ZOMBİLER</button>
             <button class="btn-game" style="background:#eab308;" onclick="gecSayfa('pacman-page')">🟡 PACMAN MINIGAME</button>
             <button class="btn-game" style="background:#dc2626;" onclick="gecSayfa('maze-page')">🧭 LABİRENTTEN KAÇIŞ</button>
+            <button class="btn-game" style="background:#14b8a6;" onclick="gecSayfa('snake-page')">🐍 YILAN OYUNU</button>
 
             <div class="review-section">
                 <div class="beta-warning-box">
                     🛠️ Yorum yapma sistemi beta testindedir.
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="snake-page" class="page">
+        <div class="container">
+            <h1>🐍 Yılan Oyunu</h1>
+            <div class="game-meta"><div>Skor: <span id="snake-score" style="color: #10b981;">0</span></div></div>
+            <canvas id="snakeCanvas" width="320" height="320"></canvas>
+            <div class="gd-tip">Yön tuşları veya kaydırarak yılanı yönlendir! (32x32)</div>
+            <button class="btn-clear" style="background: #14b8a6; color: white; font-weight: bold;" onclick="initSnake()">🔄 Yeniden Başlat</button>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
         </div>
     </div>
 
@@ -414,7 +427,7 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             
-            oynaBitir(); tavsanOyunuBitir(); gdOyunuBitir(); minesOyunuBitir(); pacOyunuBitir(); mazeOyunuBitir();
+            oynaBitir(); tavsanOyunuBitir(); gdOyunuBitir(); minesOyunuBitir(); pacOyunuBitir(); mazeOyunuBitir(); snakeOyunuBitir();
             pvzGameActive = false; if(pvzAnimId) cancelAnimationFrame(pvzAnimId);
 
             if(id === 'game-page') { cizimSkor = 0; oyunBaslat(); }
@@ -426,7 +439,178 @@
             else if(id === 'pvz-page') initPvz();
             else if(id === 'pacman-page') initPacman();
             else if(id === 'maze-page') initMaze();
+            else if(id === 'snake-page') initSnake();
         }
+
+        // =======================================================
+        // YILAN (SNAKE) MOTORU VE OP MOD DESTEĞİ
+        // =======================================================
+        let snakeCanvas, snakeCtx;
+        let snakeActive = false;
+        let snakeScore = 0;
+        let snakeGridSize = 32;
+        let snakeCellSize = 10;
+        let snakeBody = [];
+        let snakeApple = { x: 0, y: 0 };
+        let snakeDx = 1, snakeDy = 0;
+        let snakeNextDx = 1, snakeNextDy = 0;
+        let snakeInterval = null;
+
+        function initSnake() {
+            snakeCanvas = document.getElementById('snakeCanvas');
+            snakeCtx = snakeCanvas.getContext('2d');
+            snakeActive = true;
+            snakeScore = 0;
+            document.getElementById('snake-score').innerText = snakeScore;
+            
+            snakeDx = 1; snakeDy = 0;
+            snakeNextDx = 1; snakeNextDy = 0;
+            
+            // Yılanın başlangıç pozisyonu
+            snakeBody = [
+                { x: 16, y: 16 },
+                { x: 15, y: 16 },
+                { x: 14, y: 16 }
+            ];
+            
+            spawnApple();
+            
+            if(snakeInterval) clearInterval(snakeInterval);
+            snakeInterval = setInterval(snakeLoop, 100); // 10 FPS Yılan Hızı
+        }
+
+        function spawnApple() {
+            let valid = false;
+            while (!valid) {
+                snakeApple = {
+                    x: Math.floor(Math.random() * snakeGridSize),
+                    y: Math.floor(Math.random() * snakeGridSize)
+                };
+                valid = true;
+                // Elma yılanın üstünde doğmasın diye kontrol
+                for (let part of snakeBody) {
+                    if (part.x === snakeApple.x && part.y === snakeApple.y) {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if(!snakeActive || document.getElementById('snake-page').style.display === 'none' && !document.getElementById('snake-page').classList.contains('active')) return;
+            
+            // Aynı eksende geri dönüşü engelliyoruz
+            if (e.key === 'ArrowUp' && snakeDy === 0) { snakeNextDx = 0; snakeNextDy = -1; e.preventDefault(); }
+            if (e.key === 'ArrowDown' && snakeDy === 0) { snakeNextDx = 0; snakeNextDy = 1; e.preventDefault(); }
+            if (e.key === 'ArrowLeft' && snakeDx === 0) { snakeNextDx = -1; snakeNextDy = 0; e.preventDefault(); }
+            if (e.key === 'ArrowRight' && snakeDx === 0) { snakeNextDx = 1; snakeNextDy = 0; e.preventDefault(); }
+        });
+
+        // Mobiller için kaydırma (Swipe) desteği
+        let snakeTouchX = 0, snakeTouchY = 0;
+        document.addEventListener('touchstart', e => { 
+            if(e.target.id === 'snakeCanvas') {
+                snakeTouchX = e.touches[0].clientX; snakeTouchY = e.touches[0].clientY; 
+            }
+        }, {passive:false});
+        
+        document.addEventListener('touchend', e => {
+            if(!snakeActive || e.target.id !== 'snakeCanvas') return;
+            let dx = e.changedTouches[0].clientX - snakeTouchX;
+            let dy = e.changedTouches[0].clientY - snakeTouchY;
+            
+            if(Math.abs(dx) > Math.abs(dy)) {
+                if(dx > 20 && snakeDx === 0) { snakeNextDx = 1; snakeNextDy = 0; }
+                else if(dx < -20 && snakeDx === 0) { snakeNextDx = -1; snakeNextDy = 0; }
+            } else {
+                if(dy > 20 && snakeDy === 0) { snakeNextDx = 0; snakeNextDy = 1; }
+                else if(dy < -20 && snakeDy === 0) { snakeNextDx = 0; snakeNextDy = -1; }
+            }
+        });
+
+        function snakeLoop() {
+            if (!snakeActive) return;
+            
+            // Yönü Güncelle
+            snakeDx = snakeNextDx;
+            snakeDy = snakeNextDy;
+            
+            // Yeni başın pozisyonu
+            let head = { x: snakeBody[0].x + snakeDx, y: snakeBody[0].y + snakeDy };
+            
+            // Duvara Çarpışma Kontrolü
+            if (head.x < 0 || head.x >= snakeGridSize || head.y < 0 || head.y >= snakeGridSize) {
+                if (opModAktif) {
+                    // OP Mod Aktifse Duvarların içinden geçip diğer taraftan çık
+                    head.x = (head.x + snakeGridSize) % snakeGridSize;
+                    head.y = (head.y + snakeGridSize) % snakeGridSize;
+                } else {
+                    // OP Mod kapalıysa Öl
+                    snakeActive = false;
+                    alert("💥 Duvara Çarptın! Skorun: " + snakeScore);
+                    initSnake(); // Tekrar başlasın
+                    return;
+                }
+            }
+            
+            // Kendi Vücuduna Çarpma Kontrolü
+            if (!opModAktif) {
+                for (let part of snakeBody) {
+                    if (head.x === part.x && head.y === part.y) {
+                        snakeActive = false;
+                        alert("💥 Kendini Isırdın! Skorun: " + snakeScore);
+                        initSnake();
+                        return;
+                    }
+                }
+            }
+            
+            // Yeni başı ekle
+            snakeBody.unshift(head);
+            
+            // Elma yedi mi?
+            if (head.x === snakeApple.x && head.y === snakeApple.y) {
+                snakeScore += 10;
+                document.getElementById('snake-score').innerText = snakeScore;
+                spawnApple(); // Yeni elma
+                // Not: Elma yendiğinde kuyruk pop edilmez, böylece yılan uzar.
+            } else {
+                // Elma yemezse kuyruğun sonunu sil (hareket efekti)
+                snakeBody.pop();
+            }
+            
+            // ÇİZİM İŞLEMLERİ
+            snakeCtx.clearRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+            
+            // Zemin Grid Çizgileri (Opsiyonel ama hoş durur)
+            snakeCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            snakeCtx.lineWidth = 1;
+            for(let i = 0; i < snakeGridSize; i++) {
+                snakeCtx.beginPath(); snakeCtx.moveTo(i * snakeCellSize, 0); snakeCtx.lineTo(i * snakeCellSize, 320); snakeCtx.stroke();
+                snakeCtx.beginPath(); snakeCtx.moveTo(0, i * snakeCellSize); snakeCtx.lineTo(320, i * snakeCellSize); snakeCtx.stroke();
+            }
+            
+            // Elma Çizimi
+            snakeCtx.fillStyle = '#ef4444';
+            snakeCtx.beginPath();
+            snakeCtx.arc(snakeApple.x * snakeCellSize + (snakeCellSize/2), snakeApple.y * snakeCellSize + (snakeCellSize/2), snakeCellSize/2 - 1, 0, Math.PI*2);
+            snakeCtx.fill();
+            
+            // Yılan Çizimi
+            for (let i = 0; i < snakeBody.length; i++) {
+                // OP mod aktifse yılanı biraz daha transparan/hayaletvari yap
+                snakeCtx.fillStyle = i === 0 ? '#10b981' : (opModAktif ? 'rgba(16, 185, 129, 0.5)' : '#34d399');
+                snakeCtx.fillRect(snakeBody[i].x * snakeCellSize, snakeBody[i].y * snakeCellSize, snakeCellSize - 1, snakeCellSize - 1);
+            }
+        }
+        
+        function snakeOyunuBitir() {
+            snakeActive = false;
+            if(snakeInterval) clearInterval(snakeInterval);
+        }
+        // =======================================================
+
 
         // =======================================================
         // LABİRENT (MAZE) MOTORU VE OP MOD DESTEĞİ
@@ -434,7 +618,6 @@
         let mazeCanvas, mazeCtx, mazeGameActive = false;
         let mazePlayer = { x: 1, y: 1 };
         let mazeGrid = [];
-
         // Rastgele Labirent Üretme Algoritması (Recursive Backtracking)
         function generateRandomMaze() {
             let grid = [];
@@ -450,7 +633,6 @@
             let startX = 1, startY = 1;
             grid[startY][startX] = 0;
             let stack = [{x: startX, y: startY}];
-
             while (stack.length > 0) {
                 let current = stack[stack.length - 1];
                 let neighbors = [];
@@ -459,9 +641,9 @@
                     { dx: 0, dy: -2 },
                     { dx: 0, dy: 2 },
                     { dx: -2, dy: 0 },
+                  
                     { dx: 2, dy: 0 }
                 ];
-
                 for (let d of dirs) {
                     let nx = current.x + d.dx;
                     let ny = current.y + d.dy;
@@ -472,8 +654,10 @@
 
                 if (neighbors.length > 0) {
                     let next = neighbors[Math.floor(Math.random() * neighbors.length)];
-                    grid[current.y + next.dy / 2][current.x + next.dx / 2] = 0; // Duvarı kır
-                    grid[next.y][next.x] = 0; // Yeni yolu aç
+                    grid[current.y + next.dy / 2][current.x + next.dx / 2] = 0;
+                    // Duvarı kır
+                    grid[next.y][next.x] = 0;
+                    // Yeni yolu aç
                     stack.push({x: next.x, y: next.y});
                 } else {
                     stack.pop();
@@ -491,7 +675,6 @@
             
             // Her oynayışta rastgele harita oluşturuyoruz
             mazeGrid = generateRandomMaze();
-            
             mazePlayer = { x: 1, y: 1 };
             mazeGameActive = true;
             drawMaze();
@@ -521,12 +704,14 @@
             for(let r=0; r<15; r++){
                 for(let c=0; c<15; c++){
                     if(mazeGrid[r][c] === 1) {
-                        mazeCtx.fillStyle = '#334155'; // Duvar rengi
+                        mazeCtx.fillStyle = '#334155';
+                        // Duvar rengi
                         mazeCtx.fillRect(c*20, r*20, 20, 20);
                         mazeCtx.strokeStyle = '#0f172a';
                         mazeCtx.strokeRect(c*20, r*20, 20, 20);
                     } else if (mazeGrid[r][c] === 2) {
-                        mazeCtx.fillStyle = '#22c55e'; // Çıkış
+                        mazeCtx.fillStyle = '#22c55e';
+                        // Çıkış
                         mazeCtx.fillRect(c*20, r*20, 20, 20);
                     }
                 }
@@ -541,7 +726,8 @@
                         let fromY = path[i].y * 20 + 10;
                         let toX = path[i+1].x * 20 + 10;
                         let toY = path[i+1].y * 20 + 10;
-                        drawArrow(mazeCtx, fromX, fromY, toX, toY, 'rgba(245, 158, 11, 0.9)'); // Turuncu Ok
+                        drawArrow(mazeCtx, fromX, fromY, toX, toY, 'rgba(245, 158, 11, 0.9)');
+                        // Turuncu Ok
                     }
                 }
             }
@@ -584,19 +770,18 @@
             let nx = mazePlayer.x, ny = mazePlayer.y;
             if(e.key === 'ArrowUp') { ny--; e.preventDefault(); }
             if(e.key === 'ArrowDown') { ny++; e.preventDefault(); }
+    
             if(e.key === 'ArrowLeft') { nx--; e.preventDefault(); }
             if(e.key === 'ArrowRight') { nx++; e.preventDefault(); }
 
             moveMazePlayer(nx, ny);
         });
-
         let mazeTouchX = 0, mazeTouchY = 0;
         document.addEventListener('touchstart', e => { 
             if(e.target.id === 'mazeCanvas') {
                 mazeTouchX = e.touches[0].clientX; mazeTouchY = e.touches[0].clientY; 
             }
         }, {passive:false});
-
         document.addEventListener('touchend', e => {
             if(!mazeGameActive || e.target.id !== 'mazeCanvas') return;
             let dx = e.changedTouches[0].clientX - mazeTouchX;
@@ -604,13 +789,13 @@
             
             let nx = mazePlayer.x, ny = mazePlayer.y;
             if(Math.abs(dx) > Math.abs(dy)) {
-                if(dx > 20) nx++; else if(dx < -20) nx--;
+ 
+               if(dx > 20) nx++; else if(dx < -20) nx--;
             } else {
                 if(dy > 20) ny++; else if(dy < -20) ny--;
             }
             moveMazePlayer(nx, ny);
         });
-
         function moveMazePlayer(nx, ny) {
             if (nx >= 0 && nx < 15 && ny >= 0 && ny < 15 && mazeGrid[ny][nx] !== 1) {
                 mazePlayer.x = nx;
@@ -652,7 +837,8 @@
             [1,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
             [1,1,1,0,1,1,1,1,1,1,1,0,1,1,1],
             [1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
-            [1,0,1,1,1,1,2,2,2,1,1,1,1,0,1],
+         
+           [1,0,1,1,1,1,2,2,2,1,1,1,1,0,1],
             [1,0,1,2,2,2,2,2,2,2,2,2,1,0,1],
             [1,0,1,1,1,1,2,2,2,1,1,1,1,0,1],
             [1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
@@ -661,6 +847,7 @@
             [1,0,1,1,0,1,0,1,0,1,0,1,1,0,1],
             [1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+ 
         ];
 
         function initPacman() {
@@ -706,7 +893,8 @@
             let dx = e.changedTouches[0].clientX - pacTouchX;
             let dy = e.changedTouches[0].clientY - pacTouchY;
             if(Math.abs(dx) > Math.abs(dy)) {
-                if(dx > 20) { pacNextVx = 1; pacNextVy = 0; } else if(dx < -20) { pacNextVx = -1; pacNextVy = 0; }
+                if(dx > 20) { pacNextVx = 1; pacNextVy = 0; } else if(dx < -20) 
+                { pacNextVx = -1; pacNextVy = 0; }
             } else {
                 if(dy > 20) { pacNextVx = 0; pacNextVy = 1; } else if(dy < -20) { pacNextVx = 0; pacNextVy = -1; }
             }
@@ -824,6 +1012,7 @@
                 pacCtx.beginPath();
                 pacCtx.arc(g.x+10, g.y+10, 8, Math.PI, 0);
                 pacCtx.lineTo(g.x+18, g.y+18);
+    
                 pacCtx.lineTo(g.x+14, g.y+16);
                 pacCtx.lineTo(g.x+10, g.y+18);
                 pacCtx.lineTo(g.x+6, g.y+16);
@@ -862,7 +1051,8 @@
             'kedi': { cost: 10, emoji: '🐱', dmg: 5 },
             'orumcek': { cost: 20, emoji: '🕷️', dmg: 10 },
             'yilan': { cost: 30, emoji: '🐍', dmg: 20 },
-            'kopek': { cost: 40, emoji: '🐶', dmg: 100 }
+         
+           'kopek': { cost: 40, emoji: '🐶', dmg: 100 }
         };
         function initPvz() {
             pvzCanvas = document.getElementById('pvzCanvas');
@@ -870,7 +1060,8 @@
             pvzState = 'market';
             
             // HİLE KONTROLÜ
-            pvzCoins = opModAktif ? 10000 : 25; 
+            pvzCoins = opModAktif ?
+            10000 : 25; 
             
             pvzWave = 1;
             pvzGameActive = true;
@@ -963,7 +1154,8 @@
             // Arka Plan Çizimi (Evin Bahçesi)
             for (let r = 0; r < 5; r++) {
                 for (let c = 0; c < 8; c++) {
-                    pvzCtx.fillStyle = (r + c) % 2 === 0 ? '#4ade80' : '#22c55e'; // Çim Rengi
+                    pvzCtx.fillStyle = (r + c) % 2 === 0 ?
+                    '#4ade80' : '#22c55e'; // Çim Rengi
                     pvzCtx.fillRect(c * 100, r * 100, 100, 100);
                 }
             }
@@ -988,10 +1180,12 @@
                                 pvzProjectiles.push({
                                     emoji: pvzData[p.type].emoji,
                                     dmg: pvzData[p.type].dmg,
+                          
                                     x: c * 100 + 60,
                                     y: r * 100 + 50,
                                     row: r,
-                                    speed: 0.25 // Mermi Hızı
+       
+                                     speed: 0.25 // Mermi Hızı
                                 });
                             }
                         }
@@ -1000,6 +1194,7 @@
             }
 
             if (pvzState === 'playing') {
+            
                 // Zombi Doğurma
                 if (pvzZombiesToSpawn > 0) {
                     pvzSpawnTimer += dt;
@@ -1012,6 +1207,7 @@
                         
                         pvzZombies.push({
                             row: r, x: 800, y: r * 100 + 50,
+            
                             hp: maxHp, maxHp: maxHp, speed: hiz, eatTimer: 0
                         });
                         pvzZombiesToSpawn--;
@@ -1042,6 +1238,7 @@
                     
                     if (isHit) {
                         for (let j = 0; j < pvzZombies.length; j++) {
+    
                             let z = pvzZombies[j];
                             if (z.row === proj.row && z.x >= proj.x - 40) {
                                 z.hp -= proj.dmg;
@@ -1144,7 +1341,7 @@
             fdCtx.beginPath(); fdCtx.moveTo(pos.x, pos.y);
         }
         function fdEnd() { if (isFdDrawing) { isFdDrawing = false;
-        fdCtx.beginPath(); } }
+            fdCtx.beginPath(); } }
         function fdMove(e) {
             if (!isFdDrawing) return;
             const pos = getFdPos(e);
@@ -1157,7 +1354,7 @@
         }
 
         function hexToRgb(hex) { let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 0, g: 0, b: 0 };
+            return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 0, g: 0, b: 0 };
         }
         function matchColor(data, pos, r, g, b, a) { return data[pos] === r && data[pos + 1] === g && data[pos + 2] === b && data[pos + 3] === a;
         }
@@ -1236,7 +1433,7 @@
         function kartlariKapat() { lockBoard = true;
             setTimeout(() => { firstCard.classList.remove('flipped'); secondCard.classList.remove('flipped'); tahtayiSifirla(); }, 1000); }
         function tahtayiSifirla() { [hasFlippedCard, lockBoard] = [false, false];
-        [firstCard, secondCard] = [null, null]; }
+            [firstCard, secondCard] = [null, null]; }
 
         // --- TAVŞAN YAKALAMA ---
         let tavsanSkor = 0;
@@ -1306,7 +1503,7 @@
         function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
         function aiKonus(metin) { if ('speechSynthesis' in window) { const speech = new SpeechSynthesisUtterance(metin);
-        speech.lang = 'tr-TR'; window.speechSynthesis.speak(speech); } }
+            speech.lang = 'tr-TR'; window.speechSynthesis.speak(speech); } }
         function oyunBaslat() {
             clearCanvas();
             document.getElementById('error-screen').style.display = 'none';
@@ -1322,7 +1519,7 @@
             clearInterval(zamanlayici);
             // Hile Kontrolü
             if (opModAktif || Math.random() > 0.45) { aiKonus("Harika! Bu bir " + aktifGorev);
-            confetti({particleCount: 100, spread: 60}); alert("Yapay zeka bildi: " + aktifGorev); cizimSkor++; oyunBaslat();
+                confetti({particleCount: 100, spread: 60}); alert("Yapay zeka bildi: " + aktifGorev); cizimSkor++; oyunBaslat();
             } else { aiKonus("Maalesef benzetemedim."); document.getElementById('error-screen').style.display = 'flex';
             }
         }
@@ -1348,7 +1545,7 @@
         function gdZiplamaDokunma(e) { gdZıpla(); e.preventDefault();
         }
         function gdZıpla() { if(gdPlayer.isGrounded && gdActive) { gdPlayer.vy = gdPlayer.jumpForce;
-        gdPlayer.isGrounded = false; } }
+            gdPlayer.isGrounded = false; } }
         function gdDongu() {
             if (!gdActive) return;
             gdCtx.clearRect(0, 0, gdCanvas.width, gdCanvas.height);
@@ -1357,7 +1554,7 @@
             let yuzde = Math.min(Math.floor((gdDistance / gdTotalLength) * 100), 100); document.getElementById('gd-progress').innerText = yuzde + "%";
             gdPlayer.vy += gdPlayer.gravity; gdPlayer.y += gdPlayer.vy;
             if (gdPlayer.y >= 140) { gdPlayer.y = 140; gdPlayer.vy = 0; gdPlayer.isGrounded = true;
-            gdPlayer.angle = Math.round(gdPlayer.angle / 90) * 90; } else { gdPlayer.angle += 3.5;
+                gdPlayer.angle = Math.round(gdPlayer.angle / 90) * 90; } else { gdPlayer.angle += 3.5;
             }
             gdCtx.save(); gdCtx.translate(gdPlayer.x + gdPlayer.size/2, gdPlayer.y + gdPlayer.size/2);
             gdCtx.rotate((gdPlayer.angle * Math.PI) / 180);
@@ -1369,9 +1566,9 @@
                 obs.x -= gdGameSpeed;
                 gdCtx.fillStyle = '#ef4444'; gdCtx.beginPath();
                 if (obs.type === 1) { gdCtx.moveTo(obs.x, 165); gdCtx.lineTo(obs.x + 10, 165 - obs.height);
-                gdCtx.lineTo(obs.x + 20, 165);
+                    gdCtx.lineTo(obs.x + 20, 165);
                 } else if (obs.type === 2) { gdCtx.moveTo(obs.x, 165); gdCtx.lineTo(obs.x + 8, 165 - obs.height);
-                gdCtx.lineTo(obs.x + 16, 165); gdCtx.moveTo(obs.x + 14, 165); gdCtx.lineTo(obs.x + 22, 165 - obs.height); gdCtx.lineTo(obs.x + 30, 165);
+                    gdCtx.lineTo(obs.x + 16, 165); gdCtx.moveTo(obs.x + 14, 165); gdCtx.lineTo(obs.x + 22, 165 - obs.height); gdCtx.lineTo(obs.x + 30, 165);
                 } else { gdCtx.fillRect(obs.x, 165 - obs.height, obs.width, obs.height); gdCtx.strokeStyle = '#fff'; gdCtx.strokeRect(obs.x, 165 - obs.height, obs.width, obs.height);
                 }
                 gdCtx.fill();
@@ -1405,13 +1602,13 @@
             document.getElementById('mines-status').innerText = "Devam Ediyor"; document.getElementById('mines-status').style.color = "#3b82f6";
             const grid = document.getElementById('mines-grid'); grid.innerHTML = ''; minesBoard = [];
             for (let r = 0; r < minesRows; r++) { minesBoard[r] = [];
-            for (let c = 0; c < minesCols; c++) { minesBoard[r][c] = { r: r, c: c, isMine: false, isRevealed: false, isFlagged: false, count: 0 };
+                for (let c = 0; c < minesCols; c++) { minesBoard[r][c] = { r: r, c: c, isMine: false, isRevealed: false, isFlagged: false, count: 0 };
             } }
             let minesPlaced = 0;
             while (minesPlaced < totalMines) { let r = Math.floor(Math.random() * minesRows); let c = Math.floor(Math.random() * minesCols);
-            if (!minesBoard[r][c].isMine) { minesBoard[r][c].isMine = true; minesPlaced++; } }
+                if (!minesBoard[r][c].isMine) { minesBoard[r][c].isMine = true; minesPlaced++; } }
             for (let r = 0; r < minesRows; r++) { for (let c = 0; c < minesCols; c++) { if (minesBoard[r][c].isMine) continue;
-            let count = 0; for (let dr = -1; dr <= 1; dr++) { for (let dc = -1; dc <= 1; dc++) { if (minesBoard[r + dr] && minesBoard[r + dr][c + dc] && minesBoard[r + dr][c + dc].isMine) { count++;
+                let count = 0; for (let dr = -1; dr <= 1; dr++) { for (let dc = -1; dc <= 1; dc++) { if (minesBoard[r + dr] && minesBoard[r + dr][c + dc] && minesBoard[r + dr][c + dc].isMine) { count++;
             } } } minesBoard[r][c].count = count; } }
             for (let r = 0; r < minesRows; r++) { for (let c = 0; c < minesCols; c++) {
                 const cellEl = document.createElement('div');
@@ -1456,7 +1653,7 @@
             const cellEl = document.getElementById(`cell-${r}-${c}`);
             if (!cell.isFlagged) { 
                 if (minesLeft > 0) { cell.isFlagged = true;
-                cellEl.innerText = "🚩"; minesLeft--; } 
+                    cellEl.innerText = "🚩"; minesLeft--; } 
             } else { 
                 cell.isFlagged = false;
                 cellEl.innerText = ""; minesLeft++; 
