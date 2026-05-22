@@ -78,9 +78,10 @@
         .card-down { background: #334155; border: 2px solid #475569; color: #cbd5e1; font-size: 24px; }
         .card-up { background: #1e293b; border: 2px solid #3b82f6; transform: rotateY(180deg); }
 
-        /* GEOMETRY DASH VE PACMAN STİLLERİ */
+        /* GEOMETRY DASH, PACMAN VE MAZE STİLLERİ */
         #gdCanvas { background: linear-gradient(to bottom, #1d4ed8, #1e1b4b); border-radius: 15px; border: 3px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); display: block; margin: 15px 0; touch-action: none; width: 100%; max-width: 400px; height: auto;}
         #pacCanvas { background: #000; border-radius: 10px; border: 3px solid #eab308; box-shadow: 0 0 20px rgba(234, 179, 8, 0.4); display: block; margin: 15px auto; touch-action: none; width: 100%; max-width: 300px; }
+        #mazeCanvas { background: #0f172a; border-radius: 10px; border: 3px solid #dc2626; box-shadow: 0 0 20px rgba(220, 38, 38, 0.4); display: block; margin: 15px auto; touch-action: none; width: 100%; max-width: 300px; }
         .gd-tip { font-size: 13px; color: #94a3b8; margin-top: 5px; }
 
         /* MAYIN TARLASI STİLLERİ */
@@ -145,14 +146,25 @@
             <button class="btn-game" style="background:#06b6d4;" onclick="gecSayfa('gd-page')">🔺 GEOMETRY DASH MINI</button>
             <button class="btn-game" style="background:#65a30d;" onclick="gecSayfa('mines-page')">💣 MAYIN TARLASI</button>
             <button class="btn-game" style="background:#22c55e;" onclick="gecSayfa('pvz-page')">🌻 HAYVANLAR VS ZOMBİLER</button>
-            <!-- YENİ OYUN BUTONU -->
             <button class="btn-game" style="background:#eab308;" onclick="gecSayfa('pacman-page')">🟡 PACMAN MINIGAME</button>
+            <button class="btn-game" style="background:#dc2626;" onclick="gecSayfa('maze-page')">🧭 LABİRENTTEN KAÇIŞ</button>
 
             <div class="review-section">
                 <div class="beta-warning-box">
                     🛠️ Yorum yapma sistemi beta testindedir.
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- LABİRENT SAYFASI -->
+    <div id="maze-page" class="page">
+        <div class="container">
+            <h1>🧭 Labirentten Kaçış</h1>
+            <canvas id="mazeCanvas" width="300" height="300"></canvas>
+            <div class="gd-tip">Yön tuşları veya kaydırarak çıkışı (Yeşil Kutu) bul!</div>
+            <button class="btn-clear" style="background: #dc2626; color: white; font-weight: bold;" onclick="initMaze()">🔄 Yeniden Başlat</button>
+            <button class="btn-back" onclick="gecSayfa('survey-page')">← Ana Menüye Dön</button>
         </div>
     </div>
 
@@ -325,6 +337,7 @@
                 if (typeof pvzCoins !== 'undefined') { pvzCoins = 10000; if(typeof updatePvzUI === 'function') updatePvzUI(); }
                 opMayinlariGoster(true);
                 opKartlariGoster(true);
+                if (document.getElementById('maze-page').classList.contains('active')) drawMaze();
                 document.querySelector('.op-btn').style.borderColor = "#f59e0b";
                 document.querySelector('.op-btn').style.color = "#f59e0b";
             } else if (sifre === "4655") {
@@ -335,6 +348,7 @@
                 if (typeof pvzCoins !== 'undefined' && pvzCoins > 25) { pvzCoins = 25; if(typeof updatePvzUI === 'function') updatePvzUI(); }
                 opMayinlariGoster(false);
                 opKartlariGoster(false);
+                if (document.getElementById('maze-page').classList.contains('active')) drawMaze();
                 document.querySelector('.op-btn').style.borderColor = "#475569";
                 document.querySelector('.op-btn').style.color = "white";
             } else if (sifre !== null) {
@@ -409,7 +423,7 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             
-            oynaBitir(); tavsanOyunuBitir(); gdOyunuBitir(); minesOyunuBitir(); pacOyunuBitir();
+            oynaBitir(); tavsanOyunuBitir(); gdOyunuBitir(); minesOyunuBitir(); pacOyunuBitir(); mazeOyunuBitir();
             pvzGameActive = false; if(pvzAnimId) cancelAnimationFrame(pvzAnimId); // PVZ Durdur
 
             if(id === 'game-page') { cizimSkor = 0; oyunBaslat(); }
@@ -420,7 +434,165 @@
             else if(id === 'freedraw-page') initFreeCanvas();
             else if(id === 'pvz-page') initPvz();
             else if(id === 'pacman-page') initPacman();
+            else if(id === 'maze-page') initMaze();
         }
+
+        // =======================================================
+        // LABİRENT (MAZE) MOTORU VE OP MOD DESTEĞİ
+        // =======================================================
+        let mazeCanvas, mazeCtx, mazeGameActive = false;
+        let mazePlayer = { x: 1, y: 1 };
+        
+        // 1: Duvar, 0: Yol, 2: Çıkış
+        const mazeGridTemplate = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+            [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
+            [1,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
+            [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,0,1,1,1,1,1,0,1,1,1],
+            [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+            [1,0,1,0,1,1,1,0,1,0,1,1,1,0,1],
+            [1,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
+            [1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+            [1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,0,2,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+        let mazeGrid = [];
+
+        function initMaze() {
+            mazeCanvas = document.getElementById('mazeCanvas');
+            mazeCtx = mazeCanvas.getContext('2d');
+            mazeGrid = JSON.parse(JSON.stringify(mazeGridTemplate));
+            mazePlayer = { x: 1, y: 1 };
+            mazeGameActive = true;
+            drawMaze();
+        }
+
+        function drawMaze() {
+            if (!mazeGameActive) return;
+            mazeCtx.clearRect(0, 0, 300, 300);
+
+            // Haritayı Çiz
+            for(let r=0; r<15; r++){
+                for(let c=0; c<15; c++){
+                    if(mazeGrid[r][c] === 1) {
+                        mazeCtx.fillStyle = '#334155'; // Duvar rengi
+                        mazeCtx.fillRect(c*20, r*20, 20, 20);
+                        mazeCtx.strokeStyle = '#0f172a';
+                        mazeCtx.strokeRect(c*20, r*20, 20, 20);
+                    } else if (mazeGrid[r][c] === 2) {
+                        mazeCtx.fillStyle = '#22c55e'; // Çıkış
+                        mazeCtx.fillRect(c*20, r*20, 20, 20);
+                    }
+                }
+            }
+
+            // OP MOD AKTİFSE BFS İLE YOLU BUL VE ÇİZ (KIRMIZI OKLAR / YOL)
+            if (opModAktif) {
+                let path = findMazePath(mazePlayer.x, mazePlayer.y);
+                if (path && path.length > 0) {
+                    mazeCtx.strokeStyle = 'rgba(220, 38, 38, 0.6)';
+                    mazeCtx.lineWidth = 4;
+                    mazeCtx.beginPath();
+                    mazeCtx.moveTo(mazePlayer.x * 20 + 10, mazePlayer.y * 20 + 10);
+                    for (let i = 1; i < path.length; i++) {
+                        mazeCtx.lineTo(path[i].x * 20 + 10, path[i].y * 20 + 10);
+                    }
+                    mazeCtx.stroke();
+                }
+            }
+
+            // Oyuncuyu Çiz
+            mazeCtx.fillStyle = '#3b82f6';
+            mazeCtx.beginPath();
+            mazeCtx.arc(mazePlayer.x * 20 + 10, mazePlayer.y * 20 + 10, 7, 0, Math.PI*2);
+            mazeCtx.fill();
+            mazeCtx.strokeStyle = '#fff';
+            mazeCtx.lineWidth = 1.5;
+            mazeCtx.stroke();
+        }
+
+        // Basit BFS Algoritması - Çıkışa giden yolu bulur
+        function findMazePath(startX, startY) {
+            let queue = [{x: startX, y: startY, path: [{x: startX, y: startY}]}];
+            let visited = new Set();
+            visited.add(`${startX},${startY}`);
+            
+            while(queue.length > 0) {
+                let curr = queue.shift();
+                if(mazeGrid[curr.y][curr.x] === 2) return curr.path;
+                
+                let dirs = [[0,-1],[0,1],[-1,0],[1,0]];
+                for(let d of dirs) {
+                    let nx = curr.x + d[0], ny = curr.y + d[1];
+                    if(nx >= 0 && nx < 15 && ny >= 0 && ny < 15 && mazeGrid[ny][nx] !== 1 && !visited.has(`${nx},${ny}`)) {
+                        visited.add(`${nx},${ny}`);
+                        queue.push({x: nx, y: ny, path: [...curr.path, {x: nx, y: ny}]});
+                    }
+                }
+            }
+            return null;
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if(!mazeGameActive || document.getElementById('maze-page').style.display === 'none' && !document.getElementById('maze-page').classList.contains('active')) return;
+            
+            let nx = mazePlayer.x, ny = mazePlayer.y;
+            if(e.key === 'ArrowUp') { ny--; e.preventDefault(); }
+            if(e.key === 'ArrowDown') { ny++; e.preventDefault(); }
+            if(e.key === 'ArrowLeft') { nx--; e.preventDefault(); }
+            if(e.key === 'ArrowRight') { nx++; e.preventDefault(); }
+
+            moveMazePlayer(nx, ny);
+        });
+
+        let mazeTouchX = 0, mazeTouchY = 0;
+        document.addEventListener('touchstart', e => { 
+            if(e.target.id === 'mazeCanvas') {
+                mazeTouchX = e.touches[0].clientX; mazeTouchY = e.touches[0].clientY; 
+            }
+        }, {passive:false});
+        
+        document.addEventListener('touchend', e => {
+            if(!mazeGameActive || e.target.id !== 'mazeCanvas') return;
+            let dx = e.changedTouches[0].clientX - mazeTouchX;
+            let dy = e.changedTouches[0].clientY - mazeTouchY;
+            
+            let nx = mazePlayer.x, ny = mazePlayer.y;
+            if(Math.abs(dx) > Math.abs(dy)) {
+                if(dx > 20) nx++; else if(dx < -20) nx--;
+            } else {
+                if(dy > 20) ny++; else if(dy < -20) ny--;
+            }
+            moveMazePlayer(nx, ny);
+        });
+
+        function moveMazePlayer(nx, ny) {
+            if (nx >= 0 && nx < 15 && ny >= 0 && ny < 15 && mazeGrid[ny][nx] !== 1) {
+                mazePlayer.x = nx;
+                mazePlayer.y = ny;
+                drawMaze();
+
+                if (mazeGrid[ny][nx] === 2) {
+                    mazeGameActive = false;
+                    confetti({particleCount: 150, spread: 80});
+                    setTimeout(() => {
+                        alert("🎉 Çıkışı Buldun! Harika iş!");
+                        gecSayfa('survey-page');
+                    }, 100);
+                }
+            }
+        }
+
+        function mazeOyunuBitir() {
+            mazeGameActive = false;
+        }
+        // =======================================================
+
 
         // =======================================================
         // PACMAN MOTORU
@@ -481,7 +653,7 @@
         }
 
         window.addEventListener('keydown', (e) => {
-            if(!pacGameActive) return;
+            if(!pacGameActive || document.getElementById('pacman-page').style.display === 'none' && !document.getElementById('pacman-page').classList.contains('active')) return;
             if(e.key === 'ArrowUp') { pacNextVx = 0; pacNextVy = -1; e.preventDefault(); }
             if(e.key === 'ArrowDown') { pacNextVx = 0; pacNextVy = 1; e.preventDefault(); }
             if(e.key === 'ArrowLeft') { pacNextVx = -1; pacNextVy = 0; e.preventDefault(); }
@@ -489,7 +661,9 @@
         });
 
         let pacTouchX = 0, pacTouchY = 0;
-        document.addEventListener('touchstart', e => { pacTouchX = e.touches[0].clientX; pacTouchY = e.touches[0].clientY; }, {passive:false});
+        document.addEventListener('touchstart', e => { 
+            if(e.target.id === 'pacCanvas') { pacTouchX = e.touches[0].clientX; pacTouchY = e.touches[0].clientY; }
+        }, {passive:false});
         document.addEventListener('touchend', e => {
             if(!pacGameActive || e.target.id !== 'pacCanvas') return;
             let dx = e.changedTouches[0].clientX - pacTouchX;
@@ -1139,6 +1313,7 @@
             // Hile Aktifse Mayınları Kırmızı İle Göster
             opMayinlariGoster(opModAktif);
         }
+
         function cellClick(r, c) {
             if (!minesGameActive) return; let cell = minesBoard[r][c]; if (cell.isRevealed || cell.isFlagged) return;
             cell.isRevealed = true; const cellEl = document.getElementById(`cell-${r}-${c}`); cellEl.classList.add('revealed');
@@ -1159,7 +1334,7 @@
             } else { 
                 for (let dr = -1; dr <= 1; dr++) { 
                     for (let dc = -1; dc <= 1; dc++) { 
-                        if (minesBoard[r + dr] && minesBoard[r + dr][c + dc]) cellClick(r + dr, c + dc); 
+                        if (minesBoard[r + dr] && minesBoard[r + dr][c + dc] && !(dr === 0 && dc === 0)) cellClick(r + dr, c + dc); 
                     } 
                 } 
             }
