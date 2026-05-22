@@ -14,9 +14,13 @@
         }
         .page { display: none; padding: 20px; }
         .active { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-        .bg-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%); z-index: -1; }
+        .bg-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%); z-index: -1;
+        }
         
-        .container { background: var(--glass); backdrop-filter: blur(15px); padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); max-width: 500px; width: 90%; position: relative; margin-bottom: 20px; box-sizing: border-box; }
+        .container { background: var(--glass);
+            backdrop-filter: blur(15px); padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); max-width: 500px; width: 90%;
+            position: relative; margin-bottom: 20px; box-sizing: border-box; }
         h1 { color: var(--accent); font-size: 24px; text-shadow: 0 0 15px rgba(0,255,136,0.3); margin-top: 0; }
         
         button { padding: 12px 25px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 16px; }
@@ -113,7 +117,6 @@
     
     <div class="watermark">mustafassahin5546-creator tarafından yapılmıştır</div>
 
-    <!-- OP MOD BUTONU -->
     <button class="op-btn" onclick="opModuAyarla()" title="Kod Gir">💻</button>
     
     <button class="dev-btn" onclick="devGiris()">🛠️ Geliştirici</button>
@@ -123,7 +126,6 @@
     </audio>
     <button id="music-btn" class="floating-music-btn" onclick="toggleMusic()">🎵 Müzik Aç</button>
 
-    <!-- ANA MENÜ -->
     <div id="survey-page" class="page active">
         <div class="container">
             <h1>Qwertz'in Websitesine Hoşgeldiniz!</h1>
@@ -157,7 +159,6 @@
         </div>
     </div>
 
-    <!-- LABİRENT SAYFASI -->
     <div id="maze-page" class="page">
         <div class="container">
             <h1>🧭 Labirentten Kaçış</h1>
@@ -168,7 +169,6 @@
         </div>
     </div>
 
-    <!-- PACMAN SAYFASI -->
     <div id="pacman-page" class="page">
         <div class="container">
             <h1>🟡 Pacman Minigame</h1>
@@ -180,7 +180,6 @@
         </div>
     </div>
 
-    <!-- HAYVANLAR VS ZOMBİLER (PVZ) OYUNU -->
     <div id="pvz-page" class="page">
         <div class="container" style="max-width: 850px;">
             <h1>🌻 Hayvanlar vs Zombiler 🧟</h1>
@@ -190,13 +189,10 @@
             </div>
             
             <div style="position: relative; margin: 15px 0;">
-                <!-- Oyun Bahçesi -->
                 <canvas id="pvzCanvas" width="800" height="500" style="background: #4ade80; border: 4px solid #166534; border-radius: 10px; width: 100%; max-width: 800px; touch-action: none;"></canvas>
                 
-                <!-- Sadece bu oyunda görünen Market Sembolü (Sağ Köşede) -->
                 <button id="pvz-market-toggle" style="position: absolute; right: 10px; top: 10px; background: #fbbf24; border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 5; transition: 0.2s;" onclick="togglePvzMarket()">🛒</button>
                 
-                <!-- Market Menüsü -->
                 <div id="pvz-market-container" style="display: none; position: absolute; right: 70px; top: 10px; background: rgba(15, 23, 42, 0.95); padding: 15px; border-radius: 10px; border: 2px solid #3b82f6; flex-direction: column; gap: 8px; z-index: 5; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
                     <div style="color: #93c5fd; font-size: 15px; text-align: center; margin-bottom: 5px; font-weight: bold;">🛒 Bitki Market</div>
                     <button id="btn-pvz-sinek" class="fd-btn-tool pvz-market-btn" onclick="pvzSelectPlant('sinek')">🪰 Sinek (5 🪙)</button>
@@ -213,7 +209,6 @@
         </div>
     </div>
 
-    <!-- ÖZGÜRCE RESİM YAP SAYFASI -->
     <div id="freedraw-page" class="page">
         <div class="container" style="max-width: 850px;">
             <h1>🎨 Özgürce Resim Yap</h1>
@@ -247,7 +242,6 @@
         </div>
     </div>
 
-    <!-- HAFIZA SAYFASI -->
     <div id="memory-page" class="page">
         <div class="container">
             <h1>🎴 Eşleri Bul!</h1>
@@ -258,7 +252,6 @@
         </div>
     </div>
 
-    <!-- AI ÇİZİM SAYFASI -->
     <div id="game-page" class="page">
         <div class="container">
             <h1>AI Çabuk Çiz! ✏️</h1>
@@ -282,7 +275,6 @@
         </div>
     </div>
 
-    <!-- TAVŞAN SAYFASI -->
     <div id="rabbit-page" class="page">
         <div class="container">
             <h1>🐇 Tavşan Avı Karnavalı</h1>
@@ -299,7 +291,6 @@
         </div>
     </div>
 
-    <!-- GD SAYFASI -->
     <div id="gd-page" class="page">
         <div class="container">
             <h1>🔺 Geometry Dash Mini</h1>
@@ -311,7 +302,6 @@
         </div>
     </div>
 
-    <!-- MAYIN TARLASI SAYFASI -->
     <div id="mines-page" class="page">
         <div class="container">
             <h1>💣 Mayın Tarlası</h1>
@@ -326,7 +316,6 @@
     <script>
         // --- OP MOD DEĞİŞKENLERİ VE FONKSİYONLARI ---
         let opModAktif = false;
-
         function opModuAyarla() {
             let sifre = prompt("Kodu giriniz:");
             if (sifre === "5546") {
@@ -396,7 +385,8 @@
         function toggleMusic() {
             let btn = document.getElementById('music-btn');
             if (isMusicPlaying) { audioPlayer.pause(); btn.innerHTML = '🎵 Müzik Aç'; btn.style.background = '#e11d48';
-            } else { audioPlayer.play().catch(e => console.log("Müzik engellendi:", e)); btn.innerHTML = '⏸️ Müziği Durdur'; btn.style.background = '#10b981'; }
+            } else { audioPlayer.play().catch(e => console.log("Müzik engellendi:", e));
+            btn.innerHTML = '⏸️ Müziği Durdur'; btn.style.background = '#10b981'; }
             isMusicPlaying = !isMusicPlaying;
         }
 
@@ -404,7 +394,8 @@
             document.getElementById('evet-sayi').innerText = localStorage.getItem('site_evet') || 0;
             document.getElementById('hayir-sayi').innerText = localStorage.getItem('site_hayir') || 0;
             if(localStorage.getItem('oy_kullandi') === 'true') {
-                document.getElementById('btn-evet').disabled = true; document.getElementById('btn-hayir').disabled = true;
+                document.getElementById('btn-evet').disabled = true;
+                document.getElementById('btn-hayir').disabled = true;
             }
             document.getElementById('gd-highscore').innerText = (localStorage.getItem('gd_highscore') || 0) + "%";
         };
@@ -424,7 +415,7 @@
             document.getElementById(id).classList.add('active');
             
             oynaBitir(); tavsanOyunuBitir(); gdOyunuBitir(); minesOyunuBitir(); pacOyunuBitir(); mazeOyunuBitir();
-            pvzGameActive = false; if(pvzAnimId) cancelAnimationFrame(pvzAnimId); // PVZ Durdur
+            pvzGameActive = false; if(pvzAnimId) cancelAnimationFrame(pvzAnimId);
 
             if(id === 'game-page') { cizimSkor = 0; oyunBaslat(); }
             else if(id === 'rabbit-page') tavsanOyunuBaslat();
@@ -442,34 +433,84 @@
         // =======================================================
         let mazeCanvas, mazeCtx, mazeGameActive = false;
         let mazePlayer = { x: 1, y: 1 };
-        
-        // 1: Duvar, 0: Yol, 2: Çıkış
-        const mazeGridTemplate = [
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
-            [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
-            [1,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
-            [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
-            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
-            [1,1,1,1,1,0,1,1,1,1,1,0,1,1,1],
-            [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
-            [1,0,1,0,1,1,1,0,1,0,1,1,1,0,1],
-            [1,0,1,0,0,0,0,0,1,0,0,0,0,0,1],
-            [1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],
-            [1,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
-            [1,1,1,1,1,0,1,1,1,1,1,0,1,0,1],
-            [1,0,0,0,0,0,1,0,0,0,0,0,0,2,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-        ];
         let mazeGrid = [];
+
+        // Rastgele Labirent Üretme Algoritması (Recursive Backtracking)
+        function generateRandomMaze() {
+            let grid = [];
+            // Tüm haritayı duvar (1) ile doldur
+            for (let r = 0; r < 15; r++) {
+                grid[r] = [];
+                for (let c = 0; c < 15; c++) {
+                    grid[r][c] = 1;
+                }
+            }
+
+            // Başlangıç noktası
+            let startX = 1, startY = 1;
+            grid[startY][startX] = 0;
+            let stack = [{x: startX, y: startY}];
+
+            while (stack.length > 0) {
+                let current = stack[stack.length - 1];
+                let neighbors = [];
+
+                let dirs = [
+                    { dx: 0, dy: -2 },
+                    { dx: 0, dy: 2 },
+                    { dx: -2, dy: 0 },
+                    { dx: 2, dy: 0 }
+                ];
+
+                for (let d of dirs) {
+                    let nx = current.x + d.dx;
+                    let ny = current.y + d.dy;
+                    if (nx > 0 && nx < 14 && ny > 0 && ny < 14 && grid[ny][nx] === 1) {
+                        neighbors.push({ x: nx, y: ny, dx: d.dx, dy: d.dy });
+                    }
+                }
+
+                if (neighbors.length > 0) {
+                    let next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    grid[current.y + next.dy / 2][current.x + next.dx / 2] = 0; // Duvarı kır
+                    grid[next.y][next.x] = 0; // Yeni yolu aç
+                    stack.push({x: next.x, y: next.y});
+                } else {
+                    stack.pop();
+                }
+            }
+            
+            // Çıkış Noktası
+            grid[13][13] = 2;
+            return grid;
+        }
 
         function initMaze() {
             mazeCanvas = document.getElementById('mazeCanvas');
             mazeCtx = mazeCanvas.getContext('2d');
-            mazeGrid = JSON.parse(JSON.stringify(mazeGridTemplate));
+            
+            // Her oynayışta rastgele harita oluşturuyoruz
+            mazeGrid = generateRandomMaze();
+            
             mazePlayer = { x: 1, y: 1 };
             mazeGameActive = true;
             drawMaze();
+        }
+
+        function drawArrow(ctx, fromx, fromy, tox, toy, color) {
+            let headlen = 8;
+            let dx = tox - fromx;
+            let dy = toy - fromy;
+            let angle = Math.atan2(dy, dx);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(fromx, fromy);
+            ctx.lineTo(tox, toy);
+            ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(tox, toy);
+            ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.stroke();
         }
 
         function drawMaze() {
@@ -491,18 +532,17 @@
                 }
             }
 
-            // OP MOD AKTİFSE BFS İLE YOLU BUL VE ÇİZ (KIRMIZI OKLAR / YOL)
+            // OP MOD AKTİFSE BFS İLE YOLU BUL VE ÇIKILACAK YÖNÜ OKLARLA GÖSTER
             if (opModAktif) {
                 let path = findMazePath(mazePlayer.x, mazePlayer.y);
-                if (path && path.length > 0) {
-                    mazeCtx.strokeStyle = 'rgba(220, 38, 38, 0.6)';
-                    mazeCtx.lineWidth = 4;
-                    mazeCtx.beginPath();
-                    mazeCtx.moveTo(mazePlayer.x * 20 + 10, mazePlayer.y * 20 + 10);
-                    for (let i = 1; i < path.length; i++) {
-                        mazeCtx.lineTo(path[i].x * 20 + 10, path[i].y * 20 + 10);
+                if (path && path.length > 1) {
+                    for (let i = 0; i < path.length - 1; i++) {
+                        let fromX = path[i].x * 20 + 10;
+                        let fromY = path[i].y * 20 + 10;
+                        let toX = path[i+1].x * 20 + 10;
+                        let toY = path[i+1].y * 20 + 10;
+                        drawArrow(mazeCtx, fromX, fromY, toX, toY, 'rgba(245, 158, 11, 0.9)'); // Turuncu Ok
                     }
-                    mazeCtx.stroke();
                 }
             }
 
@@ -556,7 +596,7 @@
                 mazeTouchX = e.touches[0].clientX; mazeTouchY = e.touches[0].clientY; 
             }
         }, {passive:false});
-        
+
         document.addEventListener('touchend', e => {
             if(!mazeGameActive || e.target.id !== 'mazeCanvas') return;
             let dx = e.changedTouches[0].clientX - mazeTouchX;
@@ -604,7 +644,6 @@
         let pacGhosts = [];
         let pacMapState = [];
         const pacSpeed = 2;
-        
         // 1: Duvar, 0: Yem, 2: Boşluk (15x15 Grid)
         const pacBaseMap = [
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -646,7 +685,6 @@
                 {x: 140, y: 140, vx: -1, vy: 0, color: '#3b82f6'},
                 {x: 120, y: 140, vx: 0, vy: -1, color: '#f472b6'}
             ];
-
             pacGameActive = true;
             if(pacAnimId) cancelAnimationFrame(pacAnimId);
             pacLoop();
@@ -659,7 +697,6 @@
             if(e.key === 'ArrowLeft') { pacNextVx = -1; pacNextVy = 0; e.preventDefault(); }
             if(e.key === 'ArrowRight') { pacNextVx = 1; pacNextVy = 0; e.preventDefault(); }
         });
-
         let pacTouchX = 0, pacTouchY = 0;
         document.addEventListener('touchstart', e => { 
             if(e.target.id === 'pacCanvas') { pacTouchX = e.touches[0].clientX; pacTouchY = e.touches[0].clientY; }
@@ -674,7 +711,6 @@
                 if(dy > 20) { pacNextVx = 0; pacNextVy = 1; } else if(dy < -20) { pacNextVx = 0; pacNextVy = -1; }
             }
         });
-
         function pacCanMove(px, py) {
             let r1 = Math.floor(py / 20), c1 = Math.floor(px / 20);
             let r2 = Math.floor((py + 19) / 20), c2 = Math.floor((px + 19) / 20);
@@ -686,13 +722,14 @@
 
         function pacLoop() {
             if(!pacGameActive) return;
-
             // Oyuncu Hareketi
             if (pacCanMove(pac.x + pacNextVx * pacSpeed, pac.y + pacNextVy * pacSpeed)) {
-                pac.vx = pacNextVx; pac.vy = pacNextVy;
+                pac.vx = pacNextVx;
+                pac.vy = pacNextVy;
             }
             if (pacCanMove(pac.x + pac.vx * pacSpeed, pac.y + pac.vy * pacSpeed)) {
-                pac.x += pac.vx * pacSpeed; pac.y += pac.vy * pacSpeed;
+                pac.x += pac.vx * pacSpeed;
+                pac.y += pac.vy * pacSpeed;
             }
 
             // Yem Yeme
@@ -781,7 +818,6 @@
             pacCtx.lineTo(0, 0);
             pacCtx.fill();
             pacCtx.restore();
-
             // Hayalet Çizimi
             pacGhosts.forEach(g => {
                 pacCtx.fillStyle = opModAktif ? '#9ca3af' : g.color; // OP modda hayaletler grileşir
@@ -794,7 +830,6 @@
                 pacCtx.lineTo(g.x+2, g.y+18);
                 pacCtx.fill();
             });
-
             pacAnimId = requestAnimationFrame(pacLoop);
         }
 
@@ -829,7 +864,6 @@
             'yilan': { cost: 30, emoji: '🐍', dmg: 20 },
             'kopek': { cost: 40, emoji: '🐶', dmg: 100 }
         };
-
         function initPvz() {
             pvzCanvas = document.getElementById('pvzCanvas');
             pvzCtx = pvzCanvas.getContext('2d');
@@ -850,7 +884,6 @@
             document.getElementById('pvz-market-container').style.display = 'none';
             document.getElementById('pvz-market-toggle').style.display = 'block';
             updatePvzUI();
-
             // 5 satır 8 sütunluk bahçe (Her biri 100x100 px)
             pvzGrid = [];
             for (let r = 0; r < 5; r++) {
@@ -867,7 +900,6 @@
                 let mouseEvent = new MouseEvent("mousedown", { clientX: touch.clientX, clientY: touch.clientY });
                 pvzCanvas.dispatchEvent(mouseEvent);
             }, { passive: false });
-
             if (pvzAnimId) cancelAnimationFrame(pvzAnimId);
             pvzLastTime = performance.now();
             requestAnimationFrame(pvzLoop);
@@ -891,10 +923,8 @@
             const scaleY = pvzCanvas.height / rect.height;
             let x = (e.clientX - rect.left) * scaleX;
             let y = (e.clientY - rect.top) * scaleY;
-
             let col = Math.floor(x / 100);
             let row = Math.floor(y / 100);
-
             if (col >= 0 && col < 8 && row >= 0 && row < 5) {
                 if (pvzSelectedPlant) {
                     let cost = pvzData[pvzSelectedPlant].cost;
@@ -910,9 +940,9 @@
         function pvzStartWave() {
             if (pvzState !== 'market') return;
             pvzState = 'playing';
-            pvzZombiesToSpawn = 3 + pvzWave * 2; // Her wave zombi sayısı artar
+            pvzZombiesToSpawn = 3 + pvzWave * 2;
+            // Her wave zombi sayısı artar
             pvzSpawnTimer = 0;
-            
             document.getElementById('pvz-start-btn').style.display = 'none';
             document.getElementById('pvz-market-container').style.display = 'none';
             document.getElementById('pvz-market-toggle').style.display = 'none'; // Dalga esnasında market kapalı
@@ -930,7 +960,6 @@
             pvzLastTime = timestamp;
 
             pvzCtx.clearRect(0, 0, pvzCanvas.width, pvzCanvas.height);
-
             // Arka Plan Çizimi (Evin Bahçesi)
             for (let r = 0; r < 5; r++) {
                 for (let c = 0; c < 8; c++) {
@@ -951,7 +980,6 @@
                         pvzCtx.textAlign = "center";
                         pvzCtx.textBaseline = "middle";
                         pvzCtx.fillText(pvzData[p.type].emoji, c * 100 + 50, r * 100 + 50);
-
                         if (pvzState === 'playing') {
                             p.timer += dt;
                             // Her 5 saniyede bir hayvan fırlat
@@ -977,8 +1005,10 @@
                     pvzSpawnTimer += dt;
                     if (pvzSpawnTimer > 2500) { // 2.5 Saniyede bir zombi gelir
                         let r = Math.floor(Math.random() * 5);
-                        let maxHp = 10 + (pvzWave - 1) * 5; // Her wave canları artar
-                        let hiz = 0.025 + (pvzWave * 0.002); // Her wave hızlanır
+                        let maxHp = 10 + (pvzWave - 1) * 5;
+                        // Her wave canları artar
+                        let hiz = 0.025 + (pvzWave * 0.002);
+                        // Her wave hızlanır
                         
                         pvzZombies.push({
                             row: r, x: 800, y: r * 100 + 50,
@@ -997,7 +1027,8 @@
                     pvzCtx.font = "30px Arial";
                     pvzCtx.fillText(proj.emoji, proj.x, proj.y);
 
-                    if (proj.x > 850) { pvzProjectiles.splice(i, 1); continue; }
+                    if (proj.x > 850) { pvzProjectiles.splice(i, 1); continue;
+                    }
 
                     // Zombi ile Çarpışma Kontrolü 
                     let isHit = false;
@@ -1024,7 +1055,6 @@
                 // Zombiler
                 for (let i = pvzZombies.length - 1; i >= 0; i--) {
                     let z = pvzZombies[i];
-                    
                     if (z.hp <= 0) {
                         pvzZombies.splice(i, 1);
                         pvzCoins += 5; // Ölen zombiden 5 coin
@@ -1070,7 +1100,7 @@
                     
                     document.getElementById('pvz-start-btn').style.display = 'block';
                     document.getElementById('pvz-start-btn').innerText = `🚀 WAVE ${pvzWave} BAŞLAT`;
-                    document.getElementById('pvz-market-toggle').style.display = 'block'; 
+                    document.getElementById('pvz-market-toggle').style.display = 'block';
                     confetti({particleCount: 100, spread: 70, origin: { y: 0.6 }});
                 }
             }
@@ -1084,30 +1114,37 @@
         const fdCanvas = document.getElementById('freeCanvas');
         const fdCtx = fdCanvas.getContext('2d', { willReadFrequently: true });
         let isFdDrawing = false; let fdCurrentTool = 'brush'; let isFdInitialized = false;
-
         function initFreeCanvas() {
-            if(!isFdInitialized) { fdCtx.fillStyle = "#ffffff"; fdCtx.fillRect(0, 0, fdCanvas.width, fdCanvas.height); isFdInitialized = true; }
+            if(!isFdInitialized) { fdCtx.fillStyle = "#ffffff";
+            fdCtx.fillRect(0, 0, fdCanvas.width, fdCanvas.height); isFdInitialized = true; }
         }
-        function setFdTool(tool) { fdCurrentTool = tool; document.querySelectorAll('.freedraw-toolbar .fd-btn-tool').forEach(btn => btn.classList.remove('active-tool')); document.getElementById('btn-fd-' + tool).classList.add('active-tool'); }
-        function setFdColor(hexColor) { document.getElementById('fdColor').value = hexColor; }
-        function clearFreeCanvas() { if(confirm("Tüm çizimi silmek istediğinize emin misiniz?")) { fdCtx.fillStyle = "#ffffff"; fdCtx.fillRect(0, 0, fdCanvas.width, fdCanvas.height); } }
+        function setFdTool(tool) { fdCurrentTool = tool;
+        document.querySelectorAll('.freedraw-toolbar .fd-btn-tool').forEach(btn => btn.classList.remove('active-tool')); document.getElementById('btn-fd-' + tool).classList.add('active-tool'); }
+        function setFdColor(hexColor) { document.getElementById('fdColor').value = hexColor;
+        }
+        function clearFreeCanvas() { if(confirm("Tüm çizimi silmek istediğinize emin misiniz?")) { fdCtx.fillStyle = "#ffffff";
+        fdCtx.fillRect(0, 0, fdCanvas.width, fdCanvas.height); } }
         function getFdPos(e) {
-            const rect = fdCanvas.getBoundingClientRect(); const scaleX = fdCanvas.width / rect.width; const scaleY = fdCanvas.height / rect.height;
+            const rect = fdCanvas.getBoundingClientRect();
+            const scaleX = fdCanvas.width / rect.width; const scaleY = fdCanvas.height / rect.height;
             let clientX = e.touches ? e.touches[0].clientX : e.clientX;
             let clientY = e.touches ? e.touches[0].clientY : e.clientY;
             return { x: Math.floor((clientX - rect.left) * scaleX), y: Math.floor((clientY - rect.top) * scaleY) };
         }
 
-        fdCanvas.addEventListener('mousedown', fdStart); fdCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); fdStart(e); }, { passive: false });
+        fdCanvas.addEventListener('mousedown', fdStart);
+        fdCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); fdStart(e); }, { passive: false });
         fdCanvas.addEventListener('mouseup', fdEnd); fdCanvas.addEventListener('touchend', fdEnd); fdCanvas.addEventListener('mouseleave', fdEnd);
-        fdCanvas.addEventListener('mousemove', fdMove); fdCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); fdMove(e); }, { passive: false });
-
+        fdCanvas.addEventListener('mousemove', fdMove);
+        fdCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); fdMove(e); }, { passive: false });
         function fdStart(e) {
             const pos = getFdPos(e);
             if (fdCurrentTool === 'fill') { floodFill(pos.x, pos.y, document.getElementById('fdColor').value); return; }
-            isFdDrawing = true; fdCtx.beginPath(); fdCtx.moveTo(pos.x, pos.y);
+            isFdDrawing = true;
+            fdCtx.beginPath(); fdCtx.moveTo(pos.x, pos.y);
         }
-        function fdEnd() { if (isFdDrawing) { isFdDrawing = false; fdCtx.beginPath(); } }
+        function fdEnd() { if (isFdDrawing) { isFdDrawing = false;
+        fdCtx.beginPath(); } }
         function fdMove(e) {
             if (!isFdDrawing) return;
             const pos = getFdPos(e);
@@ -1115,29 +1152,42 @@
             fdCtx.lineCap = document.getElementById('fdShape').value === 'round' ? 'round' : 'square';
             fdCtx.lineJoin = document.getElementById('fdShape').value === 'round' ? 'round' : 'miter';
             fdCtx.strokeStyle = fdCurrentTool === 'eraser' ? '#ffffff' : document.getElementById('fdColor').value;
-            fdCtx.lineTo(pos.x, pos.y); fdCtx.stroke(); fdCtx.beginPath(); fdCtx.moveTo(pos.x, pos.y);
+            fdCtx.lineTo(pos.x, pos.y);
+            fdCtx.stroke(); fdCtx.beginPath(); fdCtx.moveTo(pos.x, pos.y);
         }
 
-        function hexToRgb(hex) { let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 0, g: 0, b: 0 }; }
-        function matchColor(data, pos, r, g, b, a) { return data[pos] === r && data[pos + 1] === g && data[pos + 2] === b && data[pos + 3] === a; }
+        function hexToRgb(hex) { let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : { r: 0, g: 0, b: 0 };
+        }
+        function matchColor(data, pos, r, g, b, a) { return data[pos] === r && data[pos + 1] === g && data[pos + 2] === b && data[pos + 3] === a;
+        }
         function floodFill(startX, startY, fillColorHex) {
-            const imgData = fdCtx.getImageData(0, 0, fdCanvas.width, fdCanvas.height); const data = imgData.data;
+            const imgData = fdCtx.getImageData(0, 0, fdCanvas.width, fdCanvas.height);
+            const data = imgData.data;
             const targetColor = hexToRgb(fillColorHex);
             const startPos = (startY * fdCanvas.width + startX) * 4;
             const startR = data[startPos], startG = data[startPos + 1], startB = data[startPos + 2], startA = data[startPos + 3];
-            if (startR === targetColor.r && startG === targetColor.g && startB === targetColor.b && startA === 255) return; 
-
+            if (startR === targetColor.r && startG === targetColor.g && startB === targetColor.b && startA === 255) return;
             const stack = [[startX, startY]];
             while (stack.length > 0) {
-                const [x, y] = stack.pop(); let pos = (y * fdCanvas.width + x) * 4; let currentY = y;
-                while (currentY >= 0 && matchColor(data, pos, startR, startG, startB, startA)) { currentY--; pos -= fdCanvas.width * 4; }
-                pos += fdCanvas.width * 4; currentY++;
+                const [x, y] = stack.pop();
+                let pos = (y * fdCanvas.width + x) * 4; let currentY = y;
+                while (currentY >= 0 && matchColor(data, pos, startR, startG, startB, startA)) { currentY--; pos -= fdCanvas.width * 4;
+                }
+                pos += fdCanvas.width * 4;
+                currentY++;
                 let reachLeft = false, reachRight = false;
                 while (currentY < fdCanvas.height && matchColor(data, pos, startR, startG, startB, startA)) {
-                    data[pos] = targetColor.r; data[pos + 1] = targetColor.g; data[pos + 2] = targetColor.b; data[pos + 3] = 255;
-                    if (x > 0) { if (matchColor(data, pos - 4, startR, startG, startB, startA)) { if (!reachLeft) { stack.push([x - 1, currentY]); reachLeft = true; } } else if (reachLeft) reachLeft = false; }
-                    if (x < fdCanvas.width - 1) { if (matchColor(data, pos + 4, startR, startG, startB, startA)) { if (!reachRight) { stack.push([x + 1, currentY]); reachRight = true; } } else if (reachRight) reachRight = false; }
-                    currentY++; pos += fdCanvas.width * 4;
+                    data[pos] = targetColor.r;
+                    data[pos + 1] = targetColor.g; data[pos + 2] = targetColor.b; data[pos + 3] = 255;
+                    if (x > 0) { if (matchColor(data, pos - 4, startR, startG, startB, startA)) { if (!reachLeft) { stack.push([x - 1, currentY]);
+                    reachLeft = true; } } else if (reachLeft) reachLeft = false;
+                    }
+                    if (x < fdCanvas.width - 1) { if (matchColor(data, pos + 4, startR, startG, startB, startA)) { if (!reachRight) { stack.push([x + 1, currentY]);
+                    reachRight = true; } } else if (reachRight) reachRight = false;
+                    }
+                    currentY++;
+                    pos += fdCanvas.width * 4;
                 }
             }
             fdCtx.putImageData(imgData, 0, 0);
@@ -1147,9 +1197,11 @@
         const memoryEmojis = ['🦁', '🐸', '🦄', '🐷', '🦊', '🐼', '🐯', '🐮'];
         let hasFlippedCard = false; let lockBoard = false; let firstCard, secondCard; let memoryScore = 0;
         function hafizaOyunuBaslat() {
-            const grid = document.getElementById('memory-grid-container'); grid.innerHTML = '';
+            const grid = document.getElementById('memory-grid-container');
+            grid.innerHTML = '';
             memoryScore = 0; document.getElementById('memory-score').innerText = memoryScore;
-            hasFlippedCard = false; lockBoard = false; firstCard = null; secondCard = null;
+            hasFlippedCard = false; lockBoard = false; firstCard = null;
+            secondCard = null;
             let cardArray = [...memoryEmojis, ...memoryEmojis];
             cardArray.sort(() => 0.5 - Math.random());
             cardArray.forEach(emoji => {
@@ -1161,28 +1213,37 @@
             opKartlariGoster(opModAktif);
         }
         function kartCevir() {
-            if (lockBoard) return; if (this === firstCard) return;
+            if (lockBoard) return;
+            if (this === firstCard) return;
             this.classList.add('flipped');
-            if (!hasFlippedCard) { hasFlippedCard = true; firstCard = this; return; }
+            if (!hasFlippedCard) { hasFlippedCard = true; firstCard = this; return;
+            }
             secondCard = this; eslesmeKontrol();
         }
         function eslesmeKontrol() {
-            if (firstCard.dataset.emoji === secondCard.dataset.emoji) { kartlariDevreDisiBirak(); } else { kartlariKapat(); }
+            if (firstCard.dataset.emoji === secondCard.dataset.emoji) { kartlariDevreDisiBirak();
+            } else { kartlariKapat(); }
         }
         function kartlariDevreDisiBirak() {
-            firstCard.removeEventListener('click', kartCevir); secondCard.removeEventListener('click', kartCevir);
+            firstCard.removeEventListener('click', kartCevir);
+            secondCard.removeEventListener('click', kartCevir);
             memoryScore++; document.getElementById('memory-score').innerText = memoryScore;
             confetti({particleCount: 40, spread: 50, origin: { y: 0.7 }});
-            if (memoryScore === memoryEmojis.length) { setTimeout(() => { confetti({particleCount: 250, spread: 100}); alert("Harika! Tüm kartları başarıyla eşleştirdin!"); }, 500); }
+            if (memoryScore === memoryEmojis.length) { setTimeout(() => { confetti({particleCount: 250, spread: 100}); alert("Harika! Tüm kartları başarıyla eşleştirdin!"); }, 500);
+            }
             tahtayiSifirla();
         }
-        function kartlariKapat() { lockBoard = true; setTimeout(() => { firstCard.classList.remove('flipped'); secondCard.classList.remove('flipped'); tahtayiSifirla(); }, 1000); }
-        function tahtayiSifirla() { [hasFlippedCard, lockBoard] = [false, false]; [firstCard, secondCard] = [null, null]; }
+        function kartlariKapat() { lockBoard = true;
+            setTimeout(() => { firstCard.classList.remove('flipped'); secondCard.classList.remove('flipped'); tahtayiSifirla(); }, 1000); }
+        function tahtayiSifirla() { [hasFlippedCard, lockBoard] = [false, false];
+        [firstCard, secondCard] = [null, null]; }
 
         // --- TAVŞAN YAKALAMA ---
-        let tavsanSkor = 0; let tavsanSuresi = 30; let tavsanZamanlayici; let moleZamanlayici; let sonDelik;
+        let tavsanSkor = 0;
+        let tavsanSuresi = 30; let tavsanZamanlayici; let moleZamanlayici; let sonDelik;
         function tavsanOyunuBaslat() {
-            tavsanSkor = 0; tavsanSuresi = 30; document.getElementById('rabbit-score').innerText = tavsanSkor; document.getElementById('rabbit-timer').innerText = tavsanSuresi;
+            tavsanSkor = 0; tavsanSuresi = 30;
+            document.getElementById('rabbit-score').innerText = tavsanSkor; document.getElementById('rabbit-timer').innerText = tavsanSuresi;
             clearInterval(tavsanZamanlayici); clearTimeout(moleZamanlayici);
             tavsanZamanlayici = setInterval(() => {
                 tavsanSuresi--; document.getElementById('rabbit-timer').innerText = tavsanSuresi;
@@ -1191,35 +1252,47 @@
             tavsanFirla();
         }
         function rastgeleDelik() {
-            const delikler = document.querySelectorAll('.delik'); const idx = Math.floor(Math.random() * delikler.length);
+            const delikler = document.querySelectorAll('.delik');
+            const idx = Math.floor(Math.random() * delikler.length);
             if (idx === sonDelik) return rastgeleDelik(); sonDelik = idx; return delikler[idx];
         }
         function tavsanFirla() {
-            if (tavsanSuresi <= 0) return; const delik = rastgeleDelik(); delik.classList.add('aktif');
+            if (tavsanSuresi <= 0) return;
+            const delik = rastgeleDelik(); delik.classList.add('aktif');
             // Hile Kontrolü
-            let kalmaSuresi = (!opModAktif && tavsanSkor > 300) ? Math.random() * 300 + 300 : Math.random() * 600 + 600; 
+            let kalmaSuresi = (!opModAktif && tavsanSkor > 300) ?
+            Math.random() * 300 + 300 : Math.random() * 600 + 600; 
             moleZamanlayici = setTimeout(() => { delik.classList.remove('aktif'); tavsanFirla(); }, kalmaSuresi);
         }
         function tavsanVur(index) {
-            const delik = document.getElementById('hole-' + index); if(!delik.classList.contains('aktif')) return;
+            const delik = document.getElementById('hole-' + index);
+            if(!delik.classList.contains('aktif')) return;
             tavsanSkor += 10; document.getElementById('rabbit-score').innerText = tavsanSkor;
             tavsanSuresi += 10; document.getElementById('rabbit-timer').innerText = tavsanSuresi;
             delik.classList.remove('aktif');
-            const bom = delik.querySelector('.bom-efekt'); bom.style.display = 'block'; setTimeout(() => { bom.style.display = 'none'; }, 400);
+            const bom = delik.querySelector('.bom-efekt');
+            bom.style.display = 'block'; setTimeout(() => { bom.style.display = 'none'; }, 400);
             confetti({particleCount: 10, origin: { y: 0.6 }});
         }
-        function tavsanOyunuBitir() { clearInterval(tavsanZamanlayici); clearTimeout(moleZamanlayici); document.querySelectorAll('.delik').forEach(d => d.classList.remove('aktif')); }
+        function tavsanOyunuBitir() { clearInterval(tavsanZamanlayici); clearTimeout(moleZamanlayici); document.querySelectorAll('.delik').forEach(d => d.classList.remove('aktif'));
+        }
 
         // --- AI ÇİZİM ---
-        const canvas = document.getElementById('paintCanvas'); const ctx = canvas.getContext('2d');
+        const canvas = document.getElementById('paintCanvas');
+        const ctx = canvas.getContext('2d');
         let drawing = false; let sure = 60; let zamanlayici;
-        const gorevlerKolay = ["Mandalina", "Çubuk Adam", "Güneş", "Kare", "Daire"]; const gorevlerOrta = ["Ev", "Gözlük", "Ağaç", "Yıldız", "Bulut"]; const gorevlerZor = ["Dağ", "Bisiklet", "Araba", "Kedi", "Gemi", "Telefon"];
+        const gorevlerKolay = ["Mandalina", "Çubuk Adam", "Güneş", "Kare", "Daire"]; const gorevlerOrta = ["Ev", "Gözlük", "Ağaç", "Yıldız", "Bulut"];
+        const gorevlerZor = ["Dağ", "Bisiklet", "Araba", "Kedi", "Gemi", "Telefon"];
         let cizimSkor = 0; let aktifGorev = "";
-        ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a';
-        function setRenk(yeniRenk, eleman) { ctx.strokeStyle = yeniRenk; document.querySelectorAll('.color-palette .color-box').forEach(box => box.classList.remove('selected')); eleman.classList.add('selected'); }
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a';
+        function setRenk(yeniRenk, eleman) { ctx.strokeStyle = yeniRenk; document.querySelectorAll('.color-palette .color-box').forEach(box => box.classList.remove('selected')); eleman.classList.add('selected');
+        }
         function getPos(e) {
-            const rect = canvas.getBoundingClientRect(); const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
-            let clientX = e.touches ? e.touches[0].clientX : e.clientX; let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
+            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
             return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
         }
         canvas.addEventListener('mousedown', (e) => { drawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); });
@@ -1228,31 +1301,41 @@
         canvas.addEventListener('touchstart', (e) => { drawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }, { passive: false });
         canvas.addEventListener('touchend', () => { drawing = false; ctx.beginPath(); });
         canvas.addEventListener('touchmove', (e) => { draw(e); e.preventDefault(); }, { passive: false });
-        function draw(e) { if (!drawing) return; const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); }
-        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
-        function aiKonus(metin) { if ('speechSynthesis' in window) { const speech = new SpeechSynthesisUtterance(metin); speech.lang = 'tr-TR'; window.speechSynthesis.speak(speech); } }
+        function draw(e) { if (!drawing) return; const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke();
+        }
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        function aiKonus(metin) { if ('speechSynthesis' in window) { const speech = new SpeechSynthesisUtterance(metin);
+        speech.lang = 'tr-TR'; window.speechSynthesis.speak(speech); } }
         function oyunBaslat() {
-            clearCanvas(); document.getElementById('error-screen').style.display = 'none';
+            clearCanvas();
+            document.getElementById('error-screen').style.display = 'none';
             let secimHavuzu = cizimSkor >= 4 ? gorevlerZor : (cizimSkor >= 2 ? gorevlerOrta : gorevlerKolay);
             aktifGorev = secimHavuzu[Math.floor(Math.random() * secimHavuzu.length)]; document.getElementById('ai-task').innerText = aktifGorev;
             setTimeout(() => { aiKonus("Lütfen ekrana bir " + aktifGorev + " çiziniz."); }, 300);
             sure = 60; document.getElementById('timer').innerText = sure; clearInterval(zamanlayici);
             zamanlayici = setInterval(() => { sure--; document.getElementById('timer').innerText = sure; if(sure <= 0) { clearInterval(zamanlayici); aiTarama(); } }, 1000);
         }
-        function oynaBitir() { clearInterval(zamanlayici); }
+        function oynaBitir() { clearInterval(zamanlayici);
+        }
         function aiTarama() {
             clearInterval(zamanlayici);
             // Hile Kontrolü
-            if (opModAktif || Math.random() > 0.45) { aiKonus("Harika! Bu bir " + aktifGorev); confetti({particleCount: 100, spread: 60}); alert("Yapay zeka bildi: " + aktifGorev); cizimSkor++; oyunBaslat();
-            } else { aiKonus("Maalesef benzetemedim."); document.getElementById('error-screen').style.display = 'flex'; }
+            if (opModAktif || Math.random() > 0.45) { aiKonus("Harika! Bu bir " + aktifGorev);
+            confetti({particleCount: 100, spread: 60}); alert("Yapay zeka bildi: " + aktifGorev); cizimSkor++; oyunBaslat();
+            } else { aiKonus("Maalesef benzetemedim."); document.getElementById('error-screen').style.display = 'flex';
+            }
         }
-        function yenidenDene() { oyunBaslat(); }
+        function yenidenDene() { oyunBaslat();
+        }
 
         // --- GEOMETRY DASH ---
-        const gdCanvas = document.getElementById('gdCanvas'); const gdCtx = gdCanvas.getContext('2d'); let gdAnimId;
+        const gdCanvas = document.getElementById('gdCanvas');
+        const gdCtx = gdCanvas.getContext('2d'); let gdAnimId;
         let gdPlayer, gdObstacles, gdGameSpeed, gdDistance, gdActive, gdTotalLength;
         function gdOyunuBaslat() {
-            gdActive = true; gdGameSpeed = 3.2; gdDistance = 0; gdTotalLength = 2500; gdObstacles = [];
+            gdActive = true; gdGameSpeed = 3.2;
+            gdDistance = 0; gdTotalLength = 2500; gdObstacles = [];
             gdPlayer = { x: 50, y: 140, size: 25, vy: 0, gravity: 0.6, jumpForce: -8.5, isGrounded: true, angle: 0 };
             const haritaPlanı = [400, 650, 900, 1150, 1350, 1600, 1800, 2050, 2200];
             haritaPlanı.forEach((posX, i) => { gdObstacles.push({ x: posX, type: (i % 3 === 0) ? 1 : ((i % 3 === 1) ? 2 : 3), width: 20, height: 25, passed: false }); });
@@ -1260,54 +1343,79 @@
             window.addEventListener('keydown', gdZiplamaKlavye); gdCanvas.addEventListener('touchstart', gdZiplamaDokunma, { passive: false });
             if(gdAnimId) cancelAnimationFrame(gdAnimId); gdDongu();
         }
-        function gdZiplamaKlavye(e) { if(e.code === 'Space' || e.code === 'ArrowUp') gdZıpla(); }
-        function gdZiplamaDokunma(e) { gdZıpla(); e.preventDefault(); }
-        function gdZıpla() { if(gdPlayer.isGrounded && gdActive) { gdPlayer.vy = gdPlayer.jumpForce; gdPlayer.isGrounded = false; } }
+        function gdZiplamaKlavye(e) { if(e.code === 'Space' || e.code === 'ArrowUp') gdZıpla();
+        }
+        function gdZiplamaDokunma(e) { gdZıpla(); e.preventDefault();
+        }
+        function gdZıpla() { if(gdPlayer.isGrounded && gdActive) { gdPlayer.vy = gdPlayer.jumpForce;
+        gdPlayer.isGrounded = false; } }
         function gdDongu() {
-            if (!gdActive) return; gdCtx.clearRect(0, 0, gdCanvas.width, gdCanvas.height);
+            if (!gdActive) return;
+            gdCtx.clearRect(0, 0, gdCanvas.width, gdCanvas.height);
             gdCtx.strokeStyle = '#3b82f6'; gdCtx.lineWidth = 3; gdCtx.beginPath(); gdCtx.moveTo(0, 165); gdCtx.lineTo(gdCanvas.width, 165); gdCtx.stroke();
-            gdDistance += gdGameSpeed; let yuzde = Math.min(Math.floor((gdDistance / gdTotalLength) * 100), 100); document.getElementById('gd-progress').innerText = yuzde + "%";
+            gdDistance += gdGameSpeed;
+            let yuzde = Math.min(Math.floor((gdDistance / gdTotalLength) * 100), 100); document.getElementById('gd-progress').innerText = yuzde + "%";
             gdPlayer.vy += gdPlayer.gravity; gdPlayer.y += gdPlayer.vy;
-            if (gdPlayer.y >= 140) { gdPlayer.y = 140; gdPlayer.vy = 0; gdPlayer.isGrounded = true; gdPlayer.angle = Math.round(gdPlayer.angle / 90) * 90; } else { gdPlayer.angle += 3.5; }
-            gdCtx.save(); gdCtx.translate(gdPlayer.x + gdPlayer.size/2, gdPlayer.y + gdPlayer.size/2); gdCtx.rotate((gdPlayer.angle * Math.PI) / 180);
-            gdCtx.fillStyle = '#00ff88'; gdCtx.fillRect(-gdPlayer.size/2, -gdPlayer.size/2, gdPlayer.size, gdPlayer.size); gdCtx.strokeStyle = '#ffffff'; gdCtx.lineWidth = 2; gdCtx.strokeRect(-gdPlayer.size/2, -gdPlayer.size/2, gdPlayer.size, gdPlayer.size);
+            if (gdPlayer.y >= 140) { gdPlayer.y = 140; gdPlayer.vy = 0; gdPlayer.isGrounded = true;
+            gdPlayer.angle = Math.round(gdPlayer.angle / 90) * 90; } else { gdPlayer.angle += 3.5;
+            }
+            gdCtx.save(); gdCtx.translate(gdPlayer.x + gdPlayer.size/2, gdPlayer.y + gdPlayer.size/2);
+            gdCtx.rotate((gdPlayer.angle * Math.PI) / 180);
+            gdCtx.fillStyle = '#00ff88'; gdCtx.fillRect(-gdPlayer.size/2, -gdPlayer.size/2, gdPlayer.size, gdPlayer.size); gdCtx.strokeStyle = '#ffffff'; gdCtx.lineWidth = 2;
+            gdCtx.strokeRect(-gdPlayer.size/2, -gdPlayer.size/2, gdPlayer.size, gdPlayer.size);
             gdCtx.fillStyle = '#0f172a'; gdCtx.fillRect(2, -8, 6, 6); gdCtx.fillRect(2, 2, 6, 6); gdCtx.restore();
             for (let i = 0; i < gdObstacles.length; i++) {
-                let obs = gdObstacles[i]; obs.x -= gdGameSpeed;
+                let obs = gdObstacles[i];
+                obs.x -= gdGameSpeed;
                 gdCtx.fillStyle = '#ef4444'; gdCtx.beginPath();
-                if (obs.type === 1) { gdCtx.moveTo(obs.x, 165); gdCtx.lineTo(obs.x + 10, 165 - obs.height); gdCtx.lineTo(obs.x + 20, 165);
-                } else if (obs.type === 2) { gdCtx.moveTo(obs.x, 165); gdCtx.lineTo(obs.x + 8, 165 - obs.height); gdCtx.lineTo(obs.x + 16, 165); gdCtx.moveTo(obs.x + 14, 165); gdCtx.lineTo(obs.x + 22, 165 - obs.height); gdCtx.lineTo(obs.x + 30, 165);
-                } else { gdCtx.fillRect(obs.x, 165 - obs.height, obs.width, obs.height); gdCtx.strokeStyle = '#fff'; gdCtx.strokeRect(obs.x, 165 - obs.height, obs.width, obs.height); }
+                if (obs.type === 1) { gdCtx.moveTo(obs.x, 165); gdCtx.lineTo(obs.x + 10, 165 - obs.height);
+                gdCtx.lineTo(obs.x + 20, 165);
+                } else if (obs.type === 2) { gdCtx.moveTo(obs.x, 165); gdCtx.lineTo(obs.x + 8, 165 - obs.height);
+                gdCtx.lineTo(obs.x + 16, 165); gdCtx.moveTo(obs.x + 14, 165); gdCtx.lineTo(obs.x + 22, 165 - obs.height); gdCtx.lineTo(obs.x + 30, 165);
+                } else { gdCtx.fillRect(obs.x, 165 - obs.height, obs.width, obs.height); gdCtx.strokeStyle = '#fff'; gdCtx.strokeRect(obs.x, 165 - obs.height, obs.width, obs.height);
+                }
                 gdCtx.fill();
                 let engelSol = obs.x, engelSag = obs.x + (obs.type === 2 ? 30 : obs.width), engelUst = 165 - obs.height;
-                
                 // Hile Kontrolü: opModAktif değilse çarpışma algıla
                 if (!opModAktif && gdPlayer.x + gdPlayer.size > engelSol + 4 && gdPlayer.x < engelSag - 4 && gdPlayer.y + gdPlayer.size > engelUst + 2) {
                     gdActive = false;
                     let mevcutHigh = parseInt(localStorage.getItem('gd_highscore') || 0);
-                    if(yuzde > mevcutHigh) { localStorage.setItem('gd_highscore', yuzde); document.getElementById('gd-highscore').innerText = yuzde + "%"; }
-                    alert("💥 Patladın! İlerleme derecen: " + yuzde + "%"); gdOyunuBaslat(); return;
+                    if(yuzde > mevcutHigh) { localStorage.setItem('gd_highscore', yuzde); document.getElementById('gd-highscore').innerText = yuzde + "%";
+                    }
+                    alert("💥 Patladın! İlerleme derecen: " + yuzde + "%");
+                    gdOyunuBaslat(); return;
                 }
             }
             if (yuzde >= 100) {
-                gdActive = false; confetti({particleCount: 150, spread: 80}); localStorage.setItem('gd_highscore', 100); document.getElementById('gd-highscore').innerText = "100%";
+                gdActive = false;
+                confetti({particleCount: 150, spread: 80}); localStorage.setItem('gd_highscore', 100); document.getElementById('gd-highscore').innerText = "100%";
                 alert("🏆 TEBRİKLER! Stereo Madness 1. Bölümü Tamamladın!"); gecSayfa('survey-page'); return;
             }
             gdAnimId = requestAnimationFrame(gdDongu);
         }
-        function gdOyunuBitir() { gdActive = false; if(gdAnimId) cancelAnimationFrame(gdAnimId); window.removeEventListener('keydown', gdZiplamaKlavye); }
+        function gdOyunuBitir() { gdActive = false; if(gdAnimId) cancelAnimationFrame(gdAnimId); window.removeEventListener('keydown', gdZiplamaKlavye);
+        }
 
         // --- MAYIN TARLASI ---
-        const minesRows = 8; const minesCols = 8; const totalMines = 10; let minesBoard = []; let minesLeft = totalMines; let minesGameActive = true;
+        const minesRows = 8;
+        const minesCols = 8; const totalMines = 10; let minesBoard = []; let minesLeft = totalMines; let minesGameActive = true;
         function minesOyunuBaslat() {
-            minesGameActive = true; minesLeft = totalMines; document.getElementById('mines-count').innerText = minesLeft;
+            minesGameActive = true; minesLeft = totalMines;
+            document.getElementById('mines-count').innerText = minesLeft;
             document.getElementById('mines-status').innerText = "Devam Ediyor"; document.getElementById('mines-status').style.color = "#3b82f6";
             const grid = document.getElementById('mines-grid'); grid.innerHTML = ''; minesBoard = [];
-            for (let r = 0; r < minesRows; r++) { minesBoard[r] = []; for (let c = 0; c < minesCols; c++) { minesBoard[r][c] = { r: r, c: c, isMine: false, isRevealed: false, isFlagged: false, count: 0 }; } }
-            let minesPlaced = 0; while (minesPlaced < totalMines) { let r = Math.floor(Math.random() * minesRows); let c = Math.floor(Math.random() * minesCols); if (!minesBoard[r][c].isMine) { minesBoard[r][c].isMine = true; minesPlaced++; } }
-            for (let r = 0; r < minesRows; r++) { for (let c = 0; c < minesCols; c++) { if (minesBoard[r][c].isMine) continue; let count = 0; for (let dr = -1; dr <= 1; dr++) { for (let dc = -1; dc <= 1; dc++) { if (minesBoard[r + dr] && minesBoard[r + dr][c + dc] && minesBoard[r + dr][c + dc].isMine) { count++; } } } minesBoard[r][c].count = count; } }
+            for (let r = 0; r < minesRows; r++) { minesBoard[r] = [];
+            for (let c = 0; c < minesCols; c++) { minesBoard[r][c] = { r: r, c: c, isMine: false, isRevealed: false, isFlagged: false, count: 0 };
+            } }
+            let minesPlaced = 0;
+            while (minesPlaced < totalMines) { let r = Math.floor(Math.random() * minesRows); let c = Math.floor(Math.random() * minesCols);
+            if (!minesBoard[r][c].isMine) { minesBoard[r][c].isMine = true; minesPlaced++; } }
+            for (let r = 0; r < minesRows; r++) { for (let c = 0; c < minesCols; c++) { if (minesBoard[r][c].isMine) continue;
+            let count = 0; for (let dr = -1; dr <= 1; dr++) { for (let dc = -1; dc <= 1; dc++) { if (minesBoard[r + dr] && minesBoard[r + dr][c + dc] && minesBoard[r + dr][c + dc].isMine) { count++;
+            } } } minesBoard[r][c].count = count; } }
             for (let r = 0; r < minesRows; r++) { for (let c = 0; c < minesCols; c++) {
-                const cellEl = document.createElement('div'); cellEl.classList.add('mine-cell'); cellEl.id = `cell-${r}-${c}`;
+                const cellEl = document.createElement('div');
+                cellEl.classList.add('mine-cell'); cellEl.id = `cell-${r}-${c}`;
                 cellEl.addEventListener('click', () => cellClick(r, c)); cellEl.addEventListener('contextmenu', (e) => { e.preventDefault(); cellFlag(r, c); }); grid.appendChild(cellEl);
             } }
             // Hile Aktifse Mayınları Kırmızı İle Göster
@@ -1315,22 +1423,23 @@
         }
 
         function cellClick(r, c) {
-            if (!minesGameActive) return; let cell = minesBoard[r][c]; if (cell.isRevealed || cell.isFlagged) return;
+            if (!minesGameActive) return;
+            let cell = minesBoard[r][c]; if (cell.isRevealed || cell.isFlagged) return;
             cell.isRevealed = true; const cellEl = document.getElementById(`cell-${r}-${c}`); cellEl.classList.add('revealed');
             // Görünen mayının gölgesini kapat ki orijinali bozmasın
             cellEl.style.boxShadow = "none";
             cellEl.style.border = "1px solid rgba(255,255,255,0.05)";
             
             if (cell.isMine) { 
-                cellEl.classList.add('mine'); 
+                cellEl.classList.add('mine');
                 cellEl.innerText = "💣"; 
                 minesOyunBitti(false); 
                 return; 
             }
             if (cell.count > 0) { 
-                cellEl.innerText = cell.count; 
+                cellEl.innerText = cell.count;
                 let colors = ["", "#3b82f6", "#22c55e", "#ef4444", "#8b5cf6", "#f59e0b", "#06b6d4", "#000", "#555"]; 
-                cellEl.style.color = colors[cell.count]; 
+                cellEl.style.color = colors[cell.count];
             } else { 
                 for (let dr = -1; dr <= 1; dr++) { 
                     for (let dc = -1; dc <= 1; dc++) { 
@@ -1342,22 +1451,26 @@
         }
 
         function cellFlag(r, c) {
-            if (!minesGameActive) return; let cell = minesBoard[r][c]; if (cell.isRevealed) return;
+            if (!minesGameActive) return;
+            let cell = minesBoard[r][c]; if (cell.isRevealed) return;
             const cellEl = document.getElementById(`cell-${r}-${c}`);
             if (!cell.isFlagged) { 
-                if (minesLeft > 0) { cell.isFlagged = true; cellEl.innerText = "🚩"; minesLeft--; } 
+                if (minesLeft > 0) { cell.isFlagged = true;
+                cellEl.innerText = "🚩"; minesLeft--; } 
             } else { 
-                cell.isFlagged = false; cellEl.innerText = ""; minesLeft++; 
+                cell.isFlagged = false;
+                cellEl.innerText = ""; minesLeft++; 
             }
             document.getElementById('mines-count').innerText = minesLeft;
             minesKazanmaKontrol();
         }
 
         function minesKazanmaKontrol() {
-            let revealedCount = 0; let correctFlags = 0;
+            let revealedCount = 0;
+            let correctFlags = 0;
             for (let r = 0; r < minesRows; r++) { 
                 for (let c = 0; c < minesCols; c++) { 
-                    if (minesBoard[r][c].isRevealed) revealedCount++; 
+                    if (minesBoard[r][c].isRevealed) revealedCount++;
                     if (minesBoard[r][c].isMine && minesBoard[r][c].isFlagged) correctFlags++; 
                 } 
             }
@@ -1370,26 +1483,29 @@
             minesGameActive = false;
             for (let r = 0; r < minesRows; r++) { 
                 for (let c = 0; c < minesCols; c++) {
-                    let cell = minesBoard[r][c]; 
+                    let cell = minesBoard[r][c];
                     const cellEl = document.getElementById(`cell-${r}-${c}`);
                     if (cell.isMine && !kazandi) { 
-                        cellEl.classList.add('mine'); cellEl.innerText = "💣"; 
+                        cellEl.classList.add('mine');
+                        cellEl.innerText = "💣"; 
                     } else if (cell.isMine && kazandi) { 
-                        cellEl.innerText = "🚩"; cellEl.style.background = "#22c55e"; 
+                        cellEl.innerText = "🚩";
+                        cellEl.style.background = "#22c55e"; 
                     }
                 } 
             }
             if (kazandi) { 
-                document.getElementById('mines-status').innerText = "KAZANDIN! 🎉"; 
+                document.getElementById('mines-status').innerText = "KAZANDIN! 🎉";
                 document.getElementById('mines-status').style.color = "#22c55e"; 
                 confetti({particleCount: 150, spread: 80}); 
             } else { 
-                document.getElementById('mines-status').innerText = "KAYBETTİN! 💥"; 
+                document.getElementById('mines-status').innerText = "KAYBETTİN! 💥";
                 document.getElementById('mines-status').style.color = "#ef4444"; 
             }
         }
 
-        function minesOyunuBitir() { minesGameActive = false; }
+        function minesOyunuBitir() { minesGameActive = false;
+        }
     </script>
 </body>
 </html>
